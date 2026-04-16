@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetSpy Pro v2.0 - Professional Betting Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 'inter': ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #020617; 
+            color: #f8fafc;
+            margin: 0;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        ::selection { background: rgba(16, 185, 129, 0.3); }
+        
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); }
+        .glow-emerald { box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.4); }
+        
+        @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.15); }
+        
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        .outcome-row { transition: all 0.2s ease; }
+        .outcome-row:hover { background: rgba(255,255,255,0.03); }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+// ============================================
+// BETSPY PRO v2.0 - DATOS Y CONFIGURACIÓN
+// ============================================
+
+// Datos de señales (se actualizan con el tracker.py o manualmente)
+const SIGNALS_DATA = [
+    {
+        "id": "ch-001",
+        "sport": "Champions League 🏆",
+        "league": "UEFA Champions League",
+        "match": "Liverpool vs Paris Saint-Germain",
+        "home_team": "Liverpool",
+        "away_team": "Paris Saint-Germain",
+        "start_time": new Date(Date.now() + 2*60*60*1000).toISOString(),
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {"name": "Liverpool", "price": 2.05, "bookmaker": "Bet365", "movement": "+0.05", "implied_prob": 48.78},
+            {"name": "Empate", "price": 3.75, "bookmaker": "Bwin", "movement": "-0.10", "implied_prob": 26.67},
+            {"name": "PSG", "price": 4.10, "bookmaker": "Pinnacle", "movement": "+0.15", "implied_prob": 24.39}
+        ],
+        "profit_margin": 4.85,
+        "is_surebet": true,
+        "confidence": 92,
+        "time_detected": "hace 2 min",
+        "odds_history": [
+            {"time": "19:30", "home": 2.00, "draw": 3.80, "away": 4.00},
+            {"time": "19:45", "home": 2.02, "draw": 3.78, "away": 4.05},
+            {"time": "20:00", "home": 2.05, "draw": 3.75, "away": 4.10}
+        ],
+        "stats": {"home_form": "WWDWW", "away_form": "WLWDW", "h2h_last5": "3-1-1"}
+    },
+    {
+        "id": "ch-002",
+        "sport": "Champions League 🏆",
+        "league": "UEFA Champions League",
+        "match": "Atlético de Madrid vs FC Barcelona",
+        "home_team": "Atlético de Madrid",
+        "away_team": "FC Barcelona",
+        "start_time": new Date(Date.now() + 2*60*60*1000).toISOString(),
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {"name": "Atlético Madrid", "price": 2.85, "bookmaker": "Codere", "movement": "+0.10", "implied_prob": 35.09},
+            {"name": "Empate", "price": 3.30, "bookmaker": "Betfair", "movement": "0.00", "implied_prob": 30.30},
+            {"name": "Barcelona", "price": 2.65, "bookmaker": "888Sport", "movement": "-0.05", "implied_prob": 37.74}
+        ],
+        "profit_margin": 1.20,
+        "is_surebet": false,
+        "confidence": 78,
+        "time_detected": "hace 5 min",
+        "odds_history": [
+            {"time": "19:30", "home": 2.75, "draw": 3.35, "away": 2.70},
+            {"time": "19:45", "home": 2.80, "draw": 3.32, "away": 2.68},
+            {"time": "20:00", "home": 2.85, "draw": 3.30, "away": 2.65}
+        ],
+        "stats": {"home_form": "WDWLW", "away_form": "WWWWD", "h2h_last5": "2-2-1"}
+    },
+    {
+        "id": "nba-001",
+        "sport": "NBA 🇺🇸 (Play-In)",
+        "league": "NBA Play-In Tournament",
+        "match": "Miami Heat vs Charlotte Hornets",
+        "home_team": "Miami Heat",
+        "away_team": "Charlotte Hornets",
+        "start_time": new Date(Date.now() + 4*60*60*1000).toISOString(),
+        "market_name": "Moneyline",
+        "outcomes": [
+            {"name": "Miami Heat", "price": 2.85, "bookmaker": "Bwin", "movement": "+0.20", "implied_prob": 35.09},
+            {"name": "Charlotte Hornets", "price": 1.45, "bookmaker": "Bet365", "movement": "-0.05", "implied_prob": 68.97}
+        ],
+        "profit_margin": -4.05,
+        "is_surebet": false,
+        "confidence": 65,
+        "time_detected": "hace 8 min",
+        "odds_history": [
+            {"time": "18:00", "home": 2.65, "away": 1.50},
+            {"time": "18:30", "home": 2.75, "away": 1.48},
+            {"time": "19:00", "home": 2.85, "away": 1.45}
+        ],
+        "stats": {"home_form": "LWWLW", "away_form": "WWWWL", "h2h_last5": "2-3"}
+    },
+    {
+        "id": "nba-002",
+        "sport": "NBA 🇺🇸",
+        "league": "NBA Regular Season",
+        "match": "Boston Celtics vs Milwaukee Bucks",
+        "home_team": "Boston Celtics",
+        "away_team": "Milwaukee Bucks",
+        "start_time": new Date(Date.now() + 5*60*60*1000).toISOString(),
+        "market_name": "Moneyline",
+        "outcomes": [
+            {"name": "Boston Celtics", "price": 1.75, "bookmaker": "DraftKings", "movement": "-0.05", "implied_prob": 57.14},
+            {"name": "Milwaukee Bucks", "price": 2.15, "bookmaker": "FanDuel", "movement": "+0.08", "implied_prob": 46.51}
+        ],
+        "profit_margin": 3.65,
+        "is_surebet": true,
+        "confidence": 88,
+        "time_detected": "hace 3 min",
+        "odds_history": [
+            {"time": "16:00", "home": 1.80, "away": 2.10},
+            {"time": "17:00", "home": 1.78, "away": 2.12},
+            {"time": "18:00", "home": 1.75, "away": 2.15}
+        ],
+        "stats": {"home_form": "WWWLW", "away_form": "WLWWW", "h2h_last5": "3-2"}
+    },
+    {
+        "id": "atp-001",
+        "sport": "ATP Barcelona 🎾",
+        "league": "ATP 500 Barcelona",
+        "match": "C. Alcaraz vs L. Musetti",
+        "home_team": "Carlos Alcaraz",
+        "away_team": "Lorenzo Musetti",
+        "start_time": new Date(Date.now() + 1*60*60*1000).toISOString(),
+        "market_name": "Ganador del Partido",
+        "outcomes": [
+            {"name": "Carlos Alcaraz", "price": 1.22, "bookmaker": "Bet365", "movement": "-0.03", "implied_prob": 81.97},
+            {"name": "Lorenzo Musetti", "price": 5.50, "bookmaker": "William Hill", "movement": "+0.25", "implied_prob": 18.18}
+        ],
+        "profit_margin": 6.15,
+        "is_surebet": true,
+        "confidence": 95,
+        "time_detected": "hace 1 min",
+        "odds_history": [
+            {"time": "12:00", "home": 1.25, "away": 5.00},
+            {"time": "13:00", "home": 1.23, "away": 5.25},
+            {"time": "13:30", "home": 1.22, "away": 5.50}
+        ],
+        "stats": {"home_form": "WWWWW", "away_form": "WLWWL", "h2h_last5": "3-0"}
+    },
+    {
+        "id": "laliga-001",
+        "sport": "La Liga 🇪🇸",
+        "league": "La Liga Santander",
+        "match": "Real Madrid vs Sevilla FC",
+        "home_team": "Real Madrid",
+        "away_team": "Sevilla FC",
+        "start_time": new Date(Date.now() + 24*60*60*1000).toISOString(),
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {"name": "Real Madrid", "price": 1.45, "bookmaker": "Bet365", "movement": "-0.02", "implied_prob": 68.97},
+            {"name": "Empate", "price": 4.50, "bookmaker": "Betfair", "movement": "+0.10", "implied_prob": 22.22},
+            {"name": "Sevilla", "price": 7.50, "bookmaker": "Bwin", "movement": "+0.30", "implied_prob": 13.33}
+        ],
+        "profit_margin": -4.52,
+        "is_surebet": false,
+        "confidence": 58,
+        "time_detected": "hace 12 min",
+        "odds_history": [
+            {"time": "18:00", "home": 1.47, "draw": 4.40, "away": 7.20},
+            {"time": "19:00", "home": 1.46, "draw": 4.45, "away": 7.35},
+            {"time": "20:00", "home": 1.45, "draw": 4.50, "away": 7.50}
+        ],
+        "stats": {"home_form": "WWWWW", "away_form": "LDWLW", "h2h_last5": "4-1-0"}
+    }
+];
+
+const SPORTS = [
+    { id: 'all', label: 'Dashboard', icon: 'grid' },
+    { id: 'soccer', label: 'Fútbol', icon: 'activity' },
+    { id: 'basketball', label: 'Basket', icon: 'trophy' },
+    { id: 'tennis', label: 'Tenis', icon: 'zap' },
+];
+
+// ============================================
+// ESTADO DE LA APP
+// ============================================
+let state = {
+    activeTab: 'all',
+    signals: [...SIGNALS_DATA],
+    loading: false,
+    copiedId: null,
+    sortBy: 'profit',
+    expandedCards: new Set(),
+    showCalc: false,
+    selectedSignal: null,
+    stake: 100,
+    lastUpdate: new Date()
+};
+
+// ============================================
+// FUNCIONES UTILITARIAS
+// ============================================
+const icons = {
+    zap: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+    grid: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+    activity: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+    trophy: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`,
+    refresh: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>`,
+    copy: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+    check: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    chevronDown: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`,
+    chevronUp: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>`,
+    flame: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
+    target: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+    timer: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    trendUp: `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+    trendDown: `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>`,
+    percent: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>`,
+    dollar: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+    x: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    shield: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    barChart: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>`,
+    history: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>`,
+    bell: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`,
+};
+
+function filterSignals() {
+    let filtered = state.activeTab === 'all' 
+        ? state.signals 
+        : state.signals.filter(s => {
+            const sport = s.sport.toLowerCase();
+            if (state.activeTab === 'soccer') return sport.includes('liga') || sport.includes('champions') || sport.includes('bundesliga');
+            if (state.activeTab === 'basketball') return sport.includes('nba') || sport.includes('basket');
+            if (state.activeTab === 'tennis') return sport.includes('tennis') || sport.includes('atp') || sport.includes('wta');
+            return true;
+        });
+    
+    return filtered.sort((a, b) => {
+        if (state.sortBy === 'profit') return b.profit_margin - a.profit_margin;
+        if (state.sortBy === 'confidence') return (b.confidence || 0) - (a.confidence || 0);
+        if (state.sortBy === 'surebet') return (b.is_surebet ? 1 : 0) - (a.is_surebet ? 1 : 0);
+        return 0;
+    });
+}
+
+function copyToClipboard(id, text) {
+    navigator.clipboard.writeText(text);
+    state.copiedId = id;
+    render();
+    setTimeout(() => { state.copiedId = null; render(); }, 2000);
+}
+
+function toggleExpand(id) {
+    if (state.expandedCards.has(id)) {
+        state.expandedCards.delete(id);
+    } else {
+        state.expandedCards.add(id);
+    }
+    render();
+}
+
+function openCalc(signal) {
+    state.selectedSignal = signal;
+    state.showCalc = true;
+    render();
+}
+
+function closeCalc() {
+    state.showCalc = false;
+    state.selectedSignal = null;
+    render();
+}
+
+function refreshData() {
+    state.loading = true;
+    render();
+    setTimeout(() => {
+        state.signals = [...SIGNALS_DATA];
+        state.lastUpdate = new Date();
+        state.loading = false;
+        render();
+    }, 1200);
+}
+
+function setActiveTab(tab) {
+    state.activeTab = tab;
+    render();
+}
+
+function setSortBy(value) {
+    state.sortBy = value;
+    render();
+}
+
+function setStake(value) {
+    state.stake = Number(value) || 0;
+    render();
+}
+
+// ============================================
+// COMPONENTES
+// ============================================
+
+function renderMiniChart(data, color = '#10b981') {
+    if (!data || data.length === 0) return '';
+    
+    const values = data.map(d => d.home || d.away || 0);
+    const min = Math.min(...values) * 0.95;
+    const max = Math.max(...values) * 1.05;
+    const range = max - min || 1;
+    
+    const points = values.map((v, i) => {
+        const x = (i / (values.length - 1)) * 100;
+        const y = 100 - ((v - min) / range) * 100;
+        return `${x},${y}`;
+    }).join(' ');
+    
+    return `
+        <svg viewBox="0 0 100 100" class="w-full h-12" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="grad-${color.replace('#', '')}" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
+                    <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <polygon points="0,100 ${points} 100,100" fill="url(#grad-${color.replace('#', '')})"/>
+            <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    `;
+}
+
+function renderFormIndicator(form) {
+    if (!form) return '';
+    return `
+        <div class="flex gap-0.5">
+            ${form.split('').map(result => `
+                <div class="w-4 h-4 rounded text-[9px] font-black flex items-center justify-center ${
+                    result === 'W' ? 'bg-emerald-500/20 text-emerald-400' :
+                    result === 'L' ? 'bg-red-500/20 text-red-400' :
+                    'bg-amber-500/20 text-amber-400'
+                }">${result}</div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderSignalCard(signal) {
+    const isExpanded = state.expandedCards.has(signal.id);
+    const profitColor = signal.profit_margin > 2 ? 'text-emerald-400' : 
+                        signal.profit_margin > 0 ? 'text-amber-400' : 'text-red-400';
+    const profitBg = signal.profit_margin > 2 ? 'bg-emerald-500/10 border-emerald-500/20' : 
+                     signal.profit_margin > 0 ? 'bg-amber-500/10 border-amber-500/20' : 
+                     'bg-red-500/10 border-red-500/20';
+
+    return `
+        <div class="card-hover fade-in">
+            <div class="bg-gradient-to-br from-slate-900 to-slate-900/50 border border-white/5 hover:border-emerald-500/30 rounded-2xl overflow-hidden transition-all duration-300 ${isExpanded ? 'ring-1 ring-emerald-500/20' : ''}">
+                <!-- Header -->
+                <div class="p-5">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl flex items-center justify-center transition-all ${
+                                signal.is_surebet 
+                                    ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/25' 
+                                    : 'bg-slate-800 text-emerald-400'
+                            }">
+                                ${signal.is_surebet ? icons.flame : icons.target}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">${signal.sport}</span>
+                                    ${signal.is_surebet ? '<span class="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 text-[8px] font-black px-2 py-0.5 rounded-full border border-amber-500/30 uppercase">Surebet</span>' : ''}
+                                </div>
+                                <h3 class="text-white font-bold text-sm">${signal.match}</h3>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-1 text-slate-500">
+                                ${icons.timer}
+                                <span class="text-[10px] font-medium">${signal.time_detected}</span>
+                            </div>
+                            <button onclick="toggleExpand('${signal.id}')" class="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white transition-all">
+                                ${isExpanded ? icons.chevronUp : icons.chevronDown}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Market Badge -->
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-md border border-emerald-500/20">${signal.market_name}</span>
+                        <div class="flex items-center gap-1 text-emerald-400">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-slow"></div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Live</span>
+                        </div>
+                    </div>
+
+                    <!-- Outcomes -->
+                    <div class="space-y-2">
+                        ${signal.outcomes.map((outcome, oIdx) => `
+                            <div class="outcome-row flex items-center justify-between bg-slate-950/50 p-3 rounded-xl border border-white/5">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">${outcome.bookmaker}</span>
+                                        ${outcome.movement ? `
+                                            <span class="text-[9px] font-bold flex items-center gap-0.5 ${
+                                                outcome.movement.startsWith('+') ? 'text-emerald-400' : 
+                                                outcome.movement.startsWith('-') ? 'text-red-400' : 'text-slate-500'
+                                            }">
+                                                ${outcome.movement.startsWith('+') ? icons.trendUp : outcome.movement.startsWith('-') ? icons.trendDown : ''}
+                                                ${outcome.movement}
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                    <div class="text-white font-bold text-sm">${outcome.name}</div>
+                                    ${outcome.implied_prob ? `<div class="text-[10px] text-slate-500 mt-0.5">Prob: ${outcome.implied_prob.toFixed(1)}%</div>` : ''}
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="text-xl font-black text-white">@${outcome.price.toFixed(2)}</div>
+                                    <button onclick="copyToClipboard('${signal.id}-${oIdx}', '${signal.match} - ${outcome.name} @${outcome.price} en ${outcome.bookmaker}')" 
+                                            class="p-2 rounded-lg transition-all ${state.copiedId === `${signal.id}-${oIdx}` ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400 hover:text-white'}">
+                                        ${state.copiedId === `${signal.id}-${oIdx}` ? icons.check : icons.copy}
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- ROI Summary -->
+                    <div class="mt-4 p-4 rounded-xl border ${profitBg} flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="${profitColor}">${icons.percent}</span>
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Margen</span>
+                                <span class="text-2xl font-black ${profitColor}">${signal.profit_margin > 0 ? '+' : ''}${signal.profit_margin}%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${signal.confidence ? `
+                                <div class="text-right mr-4">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Confianza</span>
+                                    <span class="text-lg font-black text-white">${signal.confidence}%</span>
+                                </div>
+                            ` : ''}
+                            <button onclick="openCalc(SIGNALS_DATA.find(s => s.id === '${signal.id}'))" 
+                                    class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-tight transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+                                ${icons.dollar} Calcular
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expanded Section -->
+                ${isExpanded ? `
+                    <div class="px-5 pb-5 pt-2 border-t border-white/5 fade-in">
+                        <!-- Chart -->
+                        <div class="mb-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-slate-400">${icons.barChart}</span>
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Evolución de Cuotas</span>
+                            </div>
+                            <div class="bg-slate-950/50 rounded-xl p-4 border border-white/5">
+                                ${renderMiniChart(signal.odds_history, signal.profit_margin > 0 ? '#10b981' : '#ef4444')}
+                                <div class="flex justify-between mt-2">
+                                    ${signal.odds_history?.map(h => `<span class="text-[10px] text-slate-500">${h.time}</span>`).join('') || ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        ${signal.stats ? `
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-slate-950/50 rounded-xl p-4 border border-white/5">
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">${signal.home_team}</div>
+                                    ${renderFormIndicator(signal.stats.home_form)}
+                                </div>
+                                <div class="bg-slate-950/50 rounded-xl p-4 border border-white/5">
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">${signal.away_team}</div>
+                                    ${renderFormIndicator(signal.stats.away_form)}
+                                </div>
+                            </div>
+                            ${signal.stats.h2h_last5 ? `
+                                <div class="mt-3 bg-slate-950/50 rounded-xl p-4 border border-white/5 flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-slate-400">${icons.history}</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Últimos enfrentamientos</span>
+                                    </div>
+                                    <span class="text-sm font-black text-white">${signal.stats.h2h_last5}</span>
+                                </div>
+                            ` : ''}
+                        ` : ''}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function renderStatsPanel() {
+    const surebets = state.signals.filter(s => s.is_surebet).length;
+    const avgProfit = state.signals.length > 0 
+        ? (state.signals.reduce((acc, s) => acc + s.profit_margin, 0) / state.signals.length).toFixed(2)
+        : 0;
+    const highConfidence = state.signals.filter(s => s.confidence >= 85).length;
+
+    return `
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="fade-in bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 rounded-2xl p-5">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-emerald-400">${icons.flame}</span>
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Surebets</span>
+                </div>
+                <div class="text-3xl font-black text-white">${surebets}</div>
+                <div class="text-[10px] text-slate-400 mt-1">Arbitrajes activos</div>
+            </div>
+            <div class="fade-in bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-2xl p-5" style="animation-delay: 0.1s">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-blue-400">${icons.barChart}</span>
+                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Señales</span>
+                </div>
+                <div class="text-3xl font-black text-white">${state.signals.length}</div>
+                <div class="text-[10px] text-slate-400 mt-1">Oportunidades</div>
+            </div>
+            <div class="fade-in bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 rounded-2xl p-5" style="animation-delay: 0.2s">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-amber-400">${icons.trendUp}</span>
+                    <span class="text-[10px] font-bold text-amber-400 uppercase tracking-widest">ROI Medio</span>
+                </div>
+                <div class="text-3xl font-black text-white">${avgProfit}%</div>
+                <div class="text-[10px] text-slate-400 mt-1">Margen promedio</div>
+            </div>
+            <div class="fade-in bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20 rounded-2xl p-5" style="animation-delay: 0.3s">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-purple-400">${icons.target}</span>
+                    <span class="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Alta Confianza</span>
+                </div>
+                <div class="text-3xl font-black text-white">${highConfidence}</div>
+                <div class="text-[10px] text-slate-400 mt-1">Confianza ≥85%</div>
+            </div>
+        </div>
+    `;
+}
+
+function renderCalculator() {
+    if (!state.showCalc || !state.selectedSignal) return '';
+    
+    const signal = state.selectedSignal;
+    const invSum = signal.outcomes?.reduce((acc, o) => acc + (1/o.price), 0) || 0;
+    
+    return `
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onclick="closeCalc()"></div>
+            <div class="relative bg-gradient-to-br from-slate-900 to-slate-950 border border-white/10 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl fade-in">
+                <div class="p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-xl font-black text-white">Calculadora de Stakes</h3>
+                            <p class="text-xs text-slate-400 mt-1">${signal.match}</p>
+                        </div>
+                        <button onclick="closeCalc()" class="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
+                            ${icons.x}
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <!-- Input -->
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Inversión Total</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500">${icons.dollar}</span>
+                                <input type="number" value="${state.stake}" onchange="setStake(this.value)" oninput="setStake(this.value)"
+                                       class="w-full bg-slate-950 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white text-xl font-bold focus:border-emerald-500/50 outline-none transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Stakes -->
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-slate-400">${icons.target}</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Distribución Óptima</span>
+                            </div>
+                            ${signal.outcomes?.map((outcome, oIdx) => {
+                                const individualStake = (state.stake * (1/outcome.price)) / invSum;
+                                const potentialReturn = individualStake * outcome.price;
+                                return `
+                                    <div class="bg-slate-950/80 p-4 rounded-xl border border-white/5">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">${outcome.bookmaker}</span>
+                                                    <span class="text-[10px] text-emerald-400">@${outcome.price.toFixed(2)}</span>
+                                                </div>
+                                                <div class="text-lg font-bold text-white">${outcome.name}</div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">Apostar</div>
+                                                <div class="text-2xl font-black text-white">$${individualStake.toFixed(2)}</div>
+                                                <div class="text-[10px] text-slate-400 mt-1">Retorno: $${potentialReturn.toFixed(2)}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- Summary -->
+                        <div class="p-5 rounded-2xl border ${signal.profit_margin > 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Beneficio Neto</span>
+                                    <div class="text-3xl font-black ${signal.profit_margin > 0 ? 'text-emerald-400' : 'text-red-400'}">
+                                        ${signal.profit_margin > 0 ? '+' : ''}$${(state.stake * (signal.profit_margin / 100)).toFixed(2)}
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">ROI</span>
+                                    <div class="text-3xl font-black ${signal.profit_margin > 0 ? 'text-emerald-400' : 'text-red-400'}">
+                                        ${signal.profit_margin > 0 ? '+' : ''}${signal.profit_margin}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="bg-slate-950/80 p-5 rounded-2xl border border-white/5">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-emerald-500">${icons.shield}</span>
+                                <span class="text-sm font-bold text-white">Instrucciones</span>
+                            </div>
+                            <ol class="text-xs text-slate-400 space-y-2">
+                                ${signal.outcomes?.map((outcome, i) => {
+                                    const individualStake = (state.stake * (1/outcome.price)) / invSum;
+                                    return `<li class="flex gap-2"><span class="text-emerald-400 font-bold">${i + 1}.</span> Apostar $${individualStake.toFixed(2)} a ${outcome.name} en ${outcome.bookmaker}</li>`;
+                                }).join('')}
+                            </ol>
+                        </div>
+
+                        <button onclick="closeCalc()" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 rounded-xl font-black uppercase tracking-tight hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2">
+                            ${icons.check} Entendido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ============================================
+// RENDER PRINCIPAL
+// ============================================
+function render() {
+    const filteredSignals = filterSignals();
+    const bookmakers = [...new Set(state.signals.flatMap(s => s.outcomes?.map(o => o.bookmaker) || []))];
+
+    document.getElementById('app').innerHTML = `
+        <!-- Background -->
+        <div class="fixed inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-0 left-1/4 w-[600px] h-[600px] bg-emerald-500/5 blur-[150px] rounded-full"></div>
+            <div class="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/5 blur-[150px] rounded-full"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-500/3 blur-[200px] rounded-full"></div>
+        </div>
+
+        <div class="relative max-w-7xl mx-auto p-4 md:p-8">
+            <!-- Header -->
+            <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10">
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <div class="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30 rotate-3 text-white">
+                            ${icons.zap}
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-400 rounded-full flex items-center justify-center animate-pulse-slow">
+                            <div class="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-black tracking-tight">
+                            BETSPY <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">PRO</span>
+                        </h1>
+                        <div class="flex items-center gap-3 mt-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow"></span>
+                                <span class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Live</span>
+                            </div>
+                            <span class="text-slate-700">•</span>
+                            <span class="text-[10px] text-slate-500">
+                                Actualizado: ${state.lastUpdate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <button onclick="refreshData()" ${state.loading ? 'disabled' : ''} 
+                            class="p-3 bg-slate-900 border border-white/5 rounded-xl text-slate-400 hover:text-white hover:border-emerald-500/30 transition-all disabled:opacity-50">
+                        <span class="${state.loading ? 'animate-spin inline-block' : ''}">${icons.refresh}</span>
+                    </button>
+                    
+                    <div class="flex items-center bg-slate-900/80 backdrop-blur border border-white/5 p-1.5 rounded-xl">
+                        ${SPORTS.map(sport => `
+                            <button onclick="setActiveTab('${sport.id}')" 
+                                    class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-bold text-sm ${
+                                        state.activeTab === sport.id 
+                                            ? 'bg-emerald-500 text-slate-950' 
+                                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                    }">
+                                ${icons[sport.icon]}
+                                <span class="hidden sm:inline">${sport.label}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <select onchange="setSortBy(this.value)" 
+                            class="bg-slate-900 border border-white/5 rounded-xl px-4 py-3 text-sm font-bold text-slate-300 focus:border-emerald-500/30 outline-none cursor-pointer">
+                        <option value="profit" ${state.sortBy === 'profit' ? 'selected' : ''}>Ordenar: ROI</option>
+                        <option value="confidence" ${state.sortBy === 'confidence' ? 'selected' : ''}>Ordenar: Confianza</option>
+                        <option value="surebet" ${state.sortBy === 'surebet' ? 'selected' : ''}>Ordenar: Surebets</option>
+                    </select>
+                </div>
+            </header>
+
+            <!-- Stats -->
+            ${renderStatsPanel()}
+
+            <!-- Hero -->
+            <div class="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 border border-white/5 rounded-2xl p-6 mb-10 relative overflow-hidden fade-in">
+                <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-emerald-500/20 rounded-xl text-emerald-400">
+                            ${icons.trendUp}
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Motor de Detección</span>
+                            <p class="text-slate-300 text-sm max-w-xl mt-1">
+                                Análisis de cuotas en tiempo real de ${bookmakers.length}+ casas de apuestas. 
+                                <span class="text-emerald-400 font-bold">${filteredSignals.filter(s => s.is_surebet).length} arbitrajes</span> detectados.
+                            </p>
+                        </div>
+                    </div>
+                    <button class="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur border border-white/10 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all">
+                        ${icons.bell} Configurar Alertas
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cards Grid -->
+            ${state.loading ? `
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    ${[1,2,3,4,5,6].map(() => `
+                        <div class="h-72 bg-slate-900/50 rounded-2xl border border-white/5" style="animation: pulse 2s ease-in-out infinite"></div>
+                    `).join('')}
+                </div>
+            ` : `
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    ${filteredSignals.length > 0 
+                        ? filteredSignals.map(signal => renderSignalCard(signal)).join('')
+                        : `<div class="col-span-full py-20 flex flex-col items-center justify-center text-slate-500 gap-4">
+                            <span class="opacity-30">${icons.target}</span>
+                            <p class="font-bold">No se encontraron señales para este filtro.</p>
+                           </div>`
+                    }
+                </div>
+            `}
+
+            <!-- Footer -->
+            <footer class="mt-16 border-t border-white/5 pt-8 pb-12">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        <span class="text-emerald-500">${icons.shield}</span> Sistema Seguro & Auditado
+                    </div>
+                    <div class="text-xs text-slate-600">
+                        BetSpy Pro v2.0 — Powered by The Odds API
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <!-- Calculator Modal -->
+        ${renderCalculator()}
+    `;
+}
+
+// Inicializar
+render();
+    </script>
+</body>
+</html>

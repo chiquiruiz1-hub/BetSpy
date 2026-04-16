@@ -1,0 +1,122 @@
+[
+    {
+        "sport": "Champions League 🏆",
+        "match": "Liverpool vs Paris Saint-Germain",
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {
+                "name": "Liverpool",
+                "price": 2.05,
+                "bookmaker": "Bet365"
+            },
+            {
+                "name": "Empate",
+                "price": 3.75,
+                "bookmaker": "Bwin"
+            },
+            {
+                "name": "PSG",
+                "price": 4.1,
+                "bookmaker": "Pinnacle"
+            }
+        ],
+        "profit_margin": 4.85,
+        "is_surebet": true,
+        "bet_to": "Liverpool",
+        "price": 2.05,
+        "bookmaker": "Bet365"
+    },
+    {
+        "sport": "Champions League 🏆",
+        "match": "Atlético de Madrid vs FC Barcelona",
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {
+                "name": "Atlético Madrid",
+                "price": 2.85,
+                "bookmaker": "Codere"
+            },
+            {
+                "name": "Empate",
+                "price": 3.3,
+                "bookmaker": "Betfair"
+            },
+            {
+                "name": "Barcelona",
+                "price": 2.65,
+                "bookmaker": "888Sport"
+            }
+        ],
+        "profit_margin": 1.2,
+        "is_surebet": false,
+        "bet_to": "Atlético Madrid",
+        "price": 2.85,
+        "bookmaker": "Codere"
+    },
+    {
+        "sport": "NBA us 🇺🇸 (Play-In)",
+        "match": "Miami Heat vs Charlotte Hornets",
+        "market_name": "Moneyline",
+        "outcomes": [
+            {
+                "name": "Miami Heat",
+                "price": 2.85,
+                "bookmaker": "Bwin"
+            },
+            {
+                "name": "Charlotte Hornets",
+                "price": 1.45,
+                "bookmaker": "Bet365"
+            }
+        ],
+        "profit_margin": -4.05,
+        "is_surebet": false,
+        "bet_to": "Miami Heat",
+        "price": 2.85,
+        "bookmaker": "Bwin"
+    },
+    {
+        "sport": "NBA us 🇺🇸 (Play-In)",
+        "match": "Portland Trail Blazers vs Phoenix Suns",
+        "market_name": "Moneyline",
+        "outcomes": [
+            {
+                "name": "Portland Trail Blazers",
+                "price": 3.1,
+                "bookmaker": "BetMGM"
+            },
+            {
+                "name": "Phoenix Suns",
+                "price": 1.48,
+                "bookmaker": "Pinnacle"
+            }
+        ],
+        "profit_margin": -0.5,
+        "is_surebet": false,
+        "bet_to": "Portland Trail Blazers",
+        "price": 3.1,
+        "bookmaker": "BetMGM"
+    },
+    {
+        "sport": "ATP Barcelona 🎾",
+        "match": "C. Alcaraz vs L. Musetti",
+        "market_name": "Ganador del Partido",
+        "outcomes": [
+            {
+                "name": "Carlos Alcaraz",
+                "price": 1.22,
+                "bookmaker": "Bet365"
+            },
+            {
+                "name": "Lorenzo Musetti",
+                "price": 5.5,
+                "bookmaker": "William Hill"
+            }
+        ],
+        "profit_margin": 6.15,
+        "is_surebet": true,
+        "bet_to": "Carlos Alcaraz",
+        "price": 1.22,
+        "bookmaker": "Bet365"
+    }
+]
