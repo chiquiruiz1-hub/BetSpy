@@ -8,13 +8,17 @@ const BOOKMAKER_IDS = {
 };
 
 async function fetchAPI(endpoint) {
-  const r = await fetch(`${BASE_URL}${endpoint}`, {
-    headers: {
-      'x-apisports-key': API_KEY,
-    },
-  });
-  if (!r.ok) return null;
-  return r.json();
+  try {
+    const r = await fetch(`${BASE_URL}${endpoint}`, {
+      headers: {
+        'x-apisports-key': API_KEY,
+      },
+    });
+    const data = await r.json();
+    return data;
+  } catch (e) {
+    return { error: e.message };
+  }
 }
 
 function calcularArbitraje(fixture, oddsData) {
@@ -103,7 +107,16 @@ export default async function handler(req, res) {
     ];
 
     if (allFixtures.length === 0) {
-      return res.status(200).json({ signals: [], meta: { source: 'api-football', error: 'No fixtures', date: today } });
+      return res.status(200).json({
+        signals: [],
+        meta: {
+          source: 'api-football',
+          error: 'No fixtures',
+          date: today,
+          hasKey: !!API_KEY,
+          todayResponse: todayData?.errors || todayData?.results || 'no data',
+        },
+      });
     }
 
     // 2. Obtener cuotas (usar endpoint de odds por fecha, gasta menos requests)
