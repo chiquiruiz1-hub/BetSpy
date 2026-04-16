@@ -4,7 +4,7 @@ const BASE_URL = 'https://v3.football.api-sports.io';
 // IDs de Bet365 y Bwin en API-Football
 const BOOKMAKER_IDS = {
   bet365: 8,
-  bwin: 16,
+  bwin: 6,
 };
 
 async function fetchAPI(endpoint) {
