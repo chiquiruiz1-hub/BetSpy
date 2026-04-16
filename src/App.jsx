@@ -57,11 +57,31 @@ function App() {
     refreshData();
   }, []);
 
-  // Extraer categorías y torneos únicos
-  const categories = [...new Set(signals.map(s => s.sport_category || 'Otros'))].sort();
-  const tournaments = selectedCategory === 'all'
-    ? [...new Set(signals.map(s => s.sport))].sort()
-    : [...new Set(signals.filter(s => (s.sport_category || 'Otros') === selectedCategory).map(s => s.sport))].sort();
+  // Lista fija de todos los deportes y torneos
+  const ALL_CATEGORIES = [
+    { id: 'Fútbol', tournaments: ['La Liga', 'Premier League', 'Bundesliga', 'Serie A', 'Ligue 1', 'UEFA Champions League', 'UEFA Europa League', 'UEFA Conference League', 'CONMEBOL Libertadores', 'CONMEBOL Sudamericana', 'MLS', 'Liga MX', 'Eredivisie', 'Liga Portugal', 'Super Lig'] },
+    { id: 'Basket', tournaments: ['NBA', 'Euroleague', 'WNBA', 'ACB', 'Liga Endesa'] },
+    { id: 'Tenis', tournaments: ['ATP Barcelona Open', 'ATP Munich', 'ATP Madrid Open', 'ATP Roland Garros', 'ATP Wimbledon', 'WTA Stuttgart Open', 'WTA Madrid Open'] },
+    { id: 'Hockey', tournaments: ['NHL', 'SHL', 'Liiga', 'AHL'] },
+    { id: 'Béisbol', tournaments: ['MLB', 'NPB', 'KBO'] },
+    { id: 'MMA', tournaments: ['UFC', 'MMA'] },
+    { id: 'Boxeo', tournaments: ['Boxing'] },
+    { id: 'Fútbol Americano', tournaments: ['NFL', 'NCAAF', 'UFL'] },
+    { id: 'Rugby', tournaments: ['NRL'] },
+    { id: 'Balonmano', tournaments: ['Handball-Bundesliga'] },
+    { id: 'Cricket', tournaments: ['IPL', 'International Twenty20'] },
+  ];
+
+  const categories = ALL_CATEGORIES.map(c => c.id);
+
+  // Torneos: los que tienen señales + los fijos de la categoría seleccionada
+  const tournamentsFromSignals = selectedCategory === 'all'
+    ? [...new Set(signals.map(s => s.sport))]
+    : [...new Set(signals.filter(s => (s.sport_category || 'Otros') === selectedCategory).map(s => s.sport))];
+  const fixedTournaments = selectedCategory === 'all'
+    ? ALL_CATEGORIES.flatMap(c => c.tournaments)
+    : (ALL_CATEGORIES.find(c => c.id === selectedCategory)?.tournaments || []);
+  const tournaments = [...new Set([...tournamentsFromSignals, ...fixedTournaments])].sort();
 
   const filteredSignals = signals.filter(s => {
     if (selectedCategory !== 'all' && (s.sport_category || 'Otros') !== selectedCategory) return false;
