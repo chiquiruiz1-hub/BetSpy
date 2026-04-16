@@ -1,4 +1,18 @@
-const API_KEY = process.env.API_FOOTBALL_KEY;
+const API_KEYS = [
+  process.env.API_FOOTBALL_KEY,
+  process.env.API_FOOTBALL_KEY_2,
+  process.env.API_FOOTBALL_KEY_3,
+].filter(Boolean);
+
+// Seleccionar key según la hora del día para distribuir uso
+function getActiveKey() {
+  if (API_KEYS.length === 0) return null;
+  const hour = new Date().getUTCHours();
+  const index = hour % API_KEYS.length;
+  return API_KEYS[index];
+}
+
+const API_KEY = getActiveKey();
 const BASE_URL = 'https://v3.football.api-sports.io';
 
 // IDs de Bet365 y Bwin en API-Football
