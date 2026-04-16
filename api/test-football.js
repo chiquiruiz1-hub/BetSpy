@@ -8,18 +8,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Test 1: Endpoint de status (no gasta requests)
-    const statusRes = await fetch('https://v3.football.api-sports.io/status', {
+    // Buscar IDs de bookmakers
+    const bkRes = await fetch('https://v3.football.api-sports.io/odds/bookmakers', {
       method: 'GET',
       headers: { 'x-apisports-key': API_KEY },
     });
-    const statusText = await statusRes.text();
+    const bkData = await bkRes.json();
+
+    // Filtrar Bet365 y Bwin
+    const relevant = (bkData.response || []).filter(b =>
+      b.name.toLowerCase().includes('bet365') || b.name.toLowerCase().includes('bwin')
+    );
 
     return res.status(200).json({
-      keyLength: API_KEY.length,
-      keyStart: API_KEY.substring(0, 4),
-      statusCode: statusRes.status,
-      statusBody: statusText.substring(0, 500),
+      bet365_bwin: relevant,
+      total_bookmakers: (bkData.response || []).length,
     });
   } catch (e) {
     return res.status(200).json({ error: e.message });
