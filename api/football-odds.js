@@ -88,24 +88,40 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Obtener partidos de hoy
+    // 1. Obtener partidos de hoy y mañana
     const today = new Date().toISOString().split('T')[0];
-    const fixturesData = await fetchAPI(`/fixtures?date=${today}&status=NS-1H-2H-HT`);
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
-    if (!fixturesData || !fixturesData.response) {
-      return res.status(200).json({ signals: [], meta: { source: 'api-football', error: 'No fixtures' } });
+    const [todayData, tomorrowData] = await Promise.all([
+      fetchAPI(`/fixtures?date=${today}&timezone=Europe/Madrid`),
+      fetchAPI(`/fixtures?date=${tomorrow}&timezone=Europe/Madrid`),
+    ]);
+
+    const allFixtures = [
+      ...(todayData?.response || []),
+      ...(tomorrowData?.response || []),
+    ];
+
+    if (allFixtures.length === 0) {
+      return res.status(200).json({ signals: [], meta: { source: 'api-football', error: 'No fixtures', date: today } });
     }
 
-    const fixtures = fixturesData.response;
+    // 2. Obtener cuotas (usar endpoint de odds por fecha, gasta menos requests)
+    const oddsPages = await fetchAPI(`/odds?date=${today}&timezone=Europe/Madrid`);
+    const oddsMap = new Map();
+    if (oddsPages?.response) {
+      for (const item of oddsPages.response) {
+        oddsMap.set(item.fixture.id, item);
+      }
+    }
+
     const signals = [];
 
-    // 2. Obtener cuotas para cada partido (limitado a 30 para no gastar muchos requests)
-    const fixturesToCheck = fixtures.slice(0, 30);
-
-    for (const fixture of fixturesToCheck) {
-      const oddsData = await fetchAPI(`/odds?fixture=${fixture.fixture.id}`);
-      if (oddsData && oddsData.response && oddsData.response.length > 0) {
-        const signal = calcularArbitraje(fixture, oddsData.response[0]);
+    // 3. Cruzar partidos con cuotas
+    for (const fixture of allFixtures) {
+      const oddsData = oddsMap.get(fixture.fixture.id);
+      if (oddsData) {
+        const signal = calcularArbitraje(fixture, oddsData);
         if (signal) signals.push(signal);
       }
     }
