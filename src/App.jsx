@@ -39,16 +39,21 @@ function App() {
       const res = await fetch('/api/odds');
       if (res.ok) {
         const data = await res.json();
-        setSignals(data.signals);
-        setMeta(data.meta);
-        setApiStatus(data.signals.length > 0 ? 'online' : 'empty');
+        if (data.signals.length > 0) {
+          setSignals(data.signals);
+          setMeta(data.meta);
+          setApiStatus('online');
+        } else {
+          // Sin créditos o sin señales: usar fallback
+          setSignals(signalsData);
+          setMeta(data.meta);
+          setApiStatus(data.meta?.no_credits ? 'no_credits' : 'cache');
+        }
       } else {
-        // Fallback a datos locales si la API falla
         setSignals(signalsData);
         setApiStatus('cache');
       }
     } catch {
-      // Sin conexion: usar datos locales
       setSignals(signalsData);
       setApiStatus('cache');
     }
@@ -96,9 +101,9 @@ function App() {
                 BETSPY <span className="text-emerald-500">PRO</span>
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`w-2 h-2 rounded-full animate-pulse ${apiStatus === 'online' ? 'bg-emerald-500' : apiStatus === 'empty' ? 'bg-amber-500' : 'bg-red-500'}`} />
+                <span className={`w-2 h-2 rounded-full animate-pulse ${apiStatus === 'online' ? 'bg-emerald-500' : apiStatus === 'no_credits' ? 'bg-amber-500' : 'bg-red-500'}`} />
                 <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">
-                  {apiStatus === 'online' ? `Radar Live: ${signals.length} señales en tiempo real` : apiStatus === 'empty' ? 'Radar Live: Sin señales activas' : 'Radar: Modo Caché (API offline)'}
+                  {apiStatus === 'online' ? `Radar Live: ${signals.length} señales en tiempo real` : apiStatus === 'no_credits' ? `Modo Demo: ${signals.length} señales (sin créditos API)` : `Radar Caché: ${signals.length} señales`}
                 </span>
               </div>
             </div>

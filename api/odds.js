@@ -103,12 +103,33 @@ export default async function handler(req, res) {
       try {
         const url = `${BASE_URL}/sports/${sportKey}/odds/?apiKey=${API_KEY}&regions=eu,uk&oddsFormat=decimal`;
         const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
-        if (r.ok) return r.json();
+        if (r.ok) {
+          return r.json();
+        }
+        // Si 401 o sin créditos, no seguir gastando
+        if (r.status === 401 || r.status === 429) return 'NO_CREDITS';
       } catch { /* skip failed sport */ }
       return [];
     });
 
-    const allOddsResults = await Promise.all(oddsPromises);
+    const rawResults = await Promise.all(oddsPromises);
+
+    // Si no hay créditos, devolver señal de sin créditos
+    if (rawResults.some(r => r === 'NO_CREDITS')) {
+      return res.status(200).json({
+        signals: [],
+        meta: {
+          total: 0,
+          surebets: 0,
+          sports_checked: 0,
+          credits_remaining: '0',
+          updated_at: new Date().toISOString(),
+          no_credits: true,
+        },
+      });
+    }
+
+    const allOddsResults = rawResults.filter(r => Array.isArray(r));
 
     // 4. Calcular arbitraje para cada evento
     const signals = [];
