@@ -105,6 +105,15 @@ function App() {
                 <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">
                   {apiStatus === 'online' ? `Radar Live: ${signals.length} señales en tiempo real` : apiStatus === 'no_credits' ? `Modo Demo: ${signals.length} señales (sin créditos API)` : `Radar Caché: ${signals.length} señales`}
                 </span>
+                {meta?.credits_remaining != null && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    Number(meta.credits_remaining) > 100 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+                    : Number(meta.credits_remaining) > 20 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+                    : 'text-red-400 bg-red-500/10 border-red-500/30'
+                  }`}>
+                    {meta.credits_remaining} créditos
+                  </span>
+                )}
               </div>
             </div>
           </div>
