@@ -1,24 +1,18 @@
 const API_KEY = process.env.THE_ODDS_API_KEY;
 const BASE_URL = 'https://api.the-odds-api.com/v4';
 
-// Deportes prioritarios para buscar señales
-const PRIORITY_SPORTS = [
-  'soccer_spain_la_liga',
-  'soccer_epl',
-  'soccer_germany_bundesliga',
-  'soccer_italy_serie_a',
-  'soccer_france_ligue_one',
-  'soccer_uefa_champs_league',
-  'soccer_uefa_europa_league',
-  'basketball_nba',
-  'basketball_euroleague',
-  'tennis_atp_french_open',
-  'tennis_atp_wimbledon',
-  'tennis_atp_us_open',
-  'tennis_atp_australian_open',
-  'icehockey_nhl',
-  'baseball_mlb',
-  'mma_mixed_martial_arts',
+// Categorías de deportes que nos interesan (por prefijo de sport_key)
+const WANTED_CATEGORIES = [
+  'soccer',
+  'basketball',
+  'tennis',
+  'icehockey',
+  'baseball',
+  'mma',
+  'boxing',
+  'rugby',
+  'handball',
+  'americanfootball',
 ];
 
 // Mapeo de sport_key a categoría en español
@@ -83,7 +77,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   // Cache 5 minutos para no gastar creditos en cada visita
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=120');
+  res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=300');
 
   if (!API_KEY) {
     return res.status(500).json({ error: 'API key not configured' });
@@ -96,17 +90,13 @@ export default async function handler(req, res) {
       return res.status(sportsRes.status).json({ error: 'Error fetching sports' });
     }
     const allSports = await sportsRes.json();
-    const activeSportKeys = new Set(allSports.filter(s => s.active).map(s => s.key));
+    // 2. Buscar todos los deportes activos que coincidan con nuestras categorías
+    const activeSports = allSports.filter(s =>
+      s.active && !s.has_outrights && WANTED_CATEGORIES.some(cat => s.key.startsWith(cat))
+    );
 
-    // 2. Filtrar deportes prioritarios activos
-    const sportsToFetch = PRIORITY_SPORTS.filter(key => activeSportKeys.has(key));
-
-    if (sportsToFetch.length === 0) {
-      const fallback = allSports.filter(s => s.active && !s.has_outrights).slice(0, 8);
-      sportsToFetch.push(...fallback.map(s => s.key));
-    }
-
-    const limitedSports = sportsToFetch.slice(0, 8);
+    // Limitar a 12 para equilibrar cobertura vs créditos
+    const limitedSports = activeSports.map(s => s.key).slice(0, 12);
 
     // 3. Descargar cuotas en paralelo
     let creditsRemaining = null;
