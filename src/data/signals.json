@@ -1,122 +1,283 @@
 [
     {
-        "sport": "Champions League 🏆",
-        "match": "Liverpool vs Paris Saint-Germain",
+        "sport_category": "Fútbol",
+        "sport": "UEFA Europa League",
+        "match": "Aston Villa vs Bologna",
         "market_name": "Cara o Cruz (H2H)",
         "outcomes": [
-            {
-                "name": "Liverpool",
-                "price": 2.05,
-                "bookmaker": "Bet365"
-            },
-            {
-                "name": "Empate",
-                "price": 3.75,
-                "bookmaker": "Bwin"
-            },
-            {
-                "name": "PSG",
-                "price": 4.1,
-                "bookmaker": "Pinnacle"
-            }
+            {"name": "Aston Villa", "price": 1.85, "bookmaker": "Bet365"},
+            {"name": "Empate", "price": 3.60, "bookmaker": "Bwin"},
+            {"name": "Bologna", "price": 5.20, "bookmaker": "Pinnacle"}
         ],
-        "profit_margin": 4.85,
+        "profit_margin": 3.42,
         "is_surebet": true,
-        "bet_to": "Liverpool",
-        "price": 2.05,
+        "bet_to": "Aston Villa",
+        "price": 1.85,
         "bookmaker": "Bet365"
     },
     {
-        "sport": "Champions League 🏆",
-        "match": "Atlético de Madrid vs FC Barcelona",
+        "sport_category": "Fútbol",
+        "sport": "UEFA Europa League",
+        "match": "Nottingham Forest vs FC Porto",
         "market_name": "Cara o Cruz (H2H)",
         "outcomes": [
-            {
-                "name": "Atlético Madrid",
-                "price": 2.85,
-                "bookmaker": "Codere"
-            },
-            {
-                "name": "Empate",
-                "price": 3.3,
-                "bookmaker": "Betfair"
-            },
-            {
-                "name": "Barcelona",
-                "price": 2.65,
-                "bookmaker": "888Sport"
-            }
+            {"name": "Nottingham Forest", "price": 2.45, "bookmaker": "Betfair"},
+            {"name": "Empate", "price": 3.30, "bookmaker": "Codere"},
+            {"name": "FC Porto", "price": 3.10, "bookmaker": "888Sport"}
         ],
-        "profit_margin": 1.2,
+        "profit_margin": 1.87,
         "is_surebet": false,
-        "bet_to": "Atlético Madrid",
-        "price": 2.85,
+        "bet_to": "Nottingham Forest",
+        "price": 2.45,
+        "bookmaker": "Betfair"
+    },
+    {
+        "sport_category": "Fútbol",
+        "sport": "UEFA Europa League",
+        "match": "Celta Vigo vs SC Freiburg",
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {"name": "Celta Vigo", "price": 2.10, "bookmaker": "Codere"},
+            {"name": "Empate", "price": 3.40, "bookmaker": "Bet365"},
+            {"name": "SC Freiburg", "price": 3.75, "bookmaker": "Bwin"}
+        ],
+        "profit_margin": 2.15,
+        "is_surebet": false,
+        "bet_to": "Celta Vigo",
+        "price": 2.10,
         "bookmaker": "Codere"
     },
     {
-        "sport": "NBA us 🇺🇸 (Play-In)",
-        "match": "Miami Heat vs Charlotte Hornets",
-        "market_name": "Moneyline",
+        "sport_category": "Fútbol",
+        "sport": "UEFA Europa League",
+        "match": "Real Betis vs Braga",
+        "market_name": "Cara o Cruz (H2H)",
         "outcomes": [
-            {
-                "name": "Miami Heat",
-                "price": 2.85,
-                "bookmaker": "Bwin"
-            },
-            {
-                "name": "Charlotte Hornets",
-                "price": 1.45,
-                "bookmaker": "Bet365"
-            }
+            {"name": "Real Betis", "price": 1.90, "bookmaker": "Bet365"},
+            {"name": "Empate", "price": 3.50, "bookmaker": "Pinnacle"},
+            {"name": "Braga", "price": 4.50, "bookmaker": "Betfair"}
         ],
-        "profit_margin": -4.05,
+        "profit_margin": 1.65,
         "is_surebet": false,
-        "bet_to": "Miami Heat",
-        "price": 2.85,
+        "bet_to": "Real Betis",
+        "price": 1.90,
+        "bookmaker": "Bet365"
+    },
+    {
+        "sport_category": "Fútbol",
+        "sport": "UEFA Conference League",
+        "match": "Fiorentina vs Crystal Palace",
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {"name": "Fiorentina", "price": 1.75, "bookmaker": "Bwin"},
+            {"name": "Empate", "price": 3.80, "bookmaker": "Bet365"},
+            {"name": "Crystal Palace", "price": 5.00, "bookmaker": "Pinnacle"}
+        ],
+        "profit_margin": 2.90,
+        "is_surebet": false,
+        "bet_to": "Fiorentina",
+        "price": 1.75,
         "bookmaker": "Bwin"
     },
     {
-        "sport": "NBA us 🇺🇸 (Play-In)",
-        "match": "Portland Trail Blazers vs Phoenix Suns",
-        "market_name": "Moneyline",
+        "sport_category": "Fútbol",
+        "sport": "UEFA Conference League",
+        "match": "Strasbourg vs Mainz",
+        "market_name": "Cara o Cruz (H2H)",
         "outcomes": [
-            {
-                "name": "Portland Trail Blazers",
-                "price": 3.1,
-                "bookmaker": "BetMGM"
-            },
-            {
-                "name": "Phoenix Suns",
-                "price": 1.48,
-                "bookmaker": "Pinnacle"
-            }
+            {"name": "Strasbourg", "price": 2.30, "bookmaker": "Betfair"},
+            {"name": "Empate", "price": 3.25, "bookmaker": "Codere"},
+            {"name": "Mainz", "price": 3.30, "bookmaker": "888Sport"}
         ],
-        "profit_margin": -0.5,
+        "profit_margin": 0.95,
         "is_surebet": false,
-        "bet_to": "Portland Trail Blazers",
-        "price": 3.1,
-        "bookmaker": "BetMGM"
+        "bet_to": "Strasbourg",
+        "price": 2.30,
+        "bookmaker": "Betfair"
     },
     {
-        "sport": "ATP Barcelona 🎾",
-        "match": "C. Alcaraz vs L. Musetti",
+        "sport_category": "Fútbol",
+        "sport": "Premier League",
+        "match": "Chelsea vs Manchester United",
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {"name": "Chelsea", "price": 2.15, "bookmaker": "Bet365"},
+            {"name": "Empate", "price": 3.40, "bookmaker": "Pinnacle"},
+            {"name": "Manchester United", "price": 3.50, "bookmaker": "Bwin"}
+        ],
+        "profit_margin": 1.30,
+        "is_surebet": false,
+        "bet_to": "Chelsea",
+        "price": 2.15,
+        "bookmaker": "Bet365"
+    },
+    {
+        "sport_category": "Fútbol",
+        "sport": "Premier League",
+        "match": "Everton vs Liverpool",
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {"name": "Everton", "price": 4.80, "bookmaker": "Codere"},
+            {"name": "Empate", "price": 3.90, "bookmaker": "Betfair"},
+            {"name": "Liverpool", "price": 1.72, "bookmaker": "Bet365"}
+        ],
+        "profit_margin": 4.10,
+        "is_surebet": true,
+        "bet_to": "Liverpool",
+        "price": 1.72,
+        "bookmaker": "Bet365"
+    },
+    {
+        "sport_category": "Fútbol",
+        "sport": "Premier League",
+        "match": "Manchester City vs Arsenal",
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {"name": "Manchester City", "price": 2.25, "bookmaker": "Bwin"},
+            {"name": "Empate", "price": 3.30, "bookmaker": "Pinnacle"},
+            {"name": "Arsenal", "price": 3.40, "bookmaker": "Bet365"}
+        ],
+        "profit_margin": 1.75,
+        "is_surebet": false,
+        "bet_to": "Manchester City",
+        "price": 2.25,
+        "bookmaker": "Bwin"
+    },
+    {
+        "sport_category": "Basket",
+        "sport": "NBA",
+        "match": "Charlotte Hornets vs Orlando Magic",
+        "market_name": "Moneyline",
+        "outcomes": [
+            {"name": "Charlotte Hornets", "price": 2.40, "bookmaker": "Bwin"},
+            {"name": "Orlando Magic", "price": 1.58, "bookmaker": "Bet365"}
+        ],
+        "profit_margin": -1.20,
+        "is_surebet": false,
+        "bet_to": "Charlotte Hornets",
+        "price": 2.40,
+        "bookmaker": "Bwin"
+    },
+    {
+        "sport_category": "Basket",
+        "sport": "NBA",
+        "match": "Golden State Warriors vs Phoenix Suns",
+        "market_name": "Moneyline",
+        "outcomes": [
+            {"name": "Golden State Warriors", "price": 2.10, "bookmaker": "Pinnacle"},
+            {"name": "Phoenix Suns", "price": 1.75, "bookmaker": "Bet365"}
+        ],
+        "profit_margin": -2.85,
+        "is_surebet": false,
+        "bet_to": "Golden State Warriors",
+        "price": 2.10,
+        "bookmaker": "Pinnacle"
+    },
+    {
+        "sport_category": "Basket",
+        "sport": "NBA",
+        "match": "Atlanta Hawks vs New York Knicks",
+        "market_name": "Moneyline",
+        "outcomes": [
+            {"name": "Atlanta Hawks", "price": 3.20, "bookmaker": "888Sport"},
+            {"name": "New York Knicks", "price": 1.35, "bookmaker": "Bet365"}
+        ],
+        "profit_margin": -3.10,
+        "is_surebet": false,
+        "bet_to": "New York Knicks",
+        "price": 1.35,
+        "bookmaker": "Bet365"
+    },
+    {
+        "sport_category": "Basket",
+        "sport": "NBA",
+        "match": "Houston Rockets vs Los Angeles Lakers",
+        "market_name": "Moneyline",
+        "outcomes": [
+            {"name": "Houston Rockets", "price": 1.90, "bookmaker": "Betfair"},
+            {"name": "Los Angeles Lakers", "price": 1.95, "bookmaker": "Pinnacle"}
+        ],
+        "profit_margin": 2.56,
+        "is_surebet": true,
+        "bet_to": "Houston Rockets",
+        "price": 1.90,
+        "bookmaker": "Betfair"
+    },
+    {
+        "sport_category": "Tenis",
+        "sport": "ATP Barcelona Open",
+        "match": "C. Alcaraz vs A. Zverev",
         "market_name": "Ganador del Partido",
         "outcomes": [
-            {
-                "name": "Carlos Alcaraz",
-                "price": 1.22,
-                "bookmaker": "Bet365"
-            },
-            {
-                "name": "Lorenzo Musetti",
-                "price": 5.5,
-                "bookmaker": "William Hill"
-            }
+            {"name": "Carlos Alcaraz", "price": 1.55, "bookmaker": "Bet365"},
+            {"name": "Alexander Zverev", "price": 2.50, "bookmaker": "Pinnacle"}
         ],
-        "profit_margin": 6.15,
-        "is_surebet": true,
+        "profit_margin": 1.23,
+        "is_surebet": false,
         "bet_to": "Carlos Alcaraz",
-        "price": 1.22,
+        "price": 1.55,
         "bookmaker": "Bet365"
+    },
+    {
+        "sport_category": "Tenis",
+        "sport": "ATP Barcelona Open",
+        "match": "H. Rune vs S. Tsitsipas",
+        "market_name": "Ganador del Partido",
+        "outcomes": [
+            {"name": "Holger Rune", "price": 1.80, "bookmaker": "Bwin"},
+            {"name": "Stefanos Tsitsipas", "price": 2.05, "bookmaker": "Betfair"}
+        ],
+        "profit_margin": 3.95,
+        "is_surebet": true,
+        "bet_to": "Holger Rune",
+        "price": 1.80,
+        "bookmaker": "Bwin"
+    },
+    {
+        "sport_category": "Tenis",
+        "sport": "ATP Munich",
+        "match": "A. Zverev vs D. Medvedev",
+        "market_name": "Ganador del Partido",
+        "outcomes": [
+            {"name": "Alexander Zverev", "price": 1.45, "bookmaker": "Bet365"},
+            {"name": "Daniil Medvedev", "price": 2.80, "bookmaker": "888Sport"}
+        ],
+        "profit_margin": 0.85,
+        "is_surebet": false,
+        "bet_to": "Alexander Zverev",
+        "price": 1.45,
+        "bookmaker": "Bet365"
+    },
+    {
+        "sport_category": "Fútbol",
+        "sport": "CONMEBOL Libertadores",
+        "match": "Flamengo vs Independiente Medellín",
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {"name": "Flamengo", "price": 1.50, "bookmaker": "Bet365"},
+            {"name": "Empate", "price": 4.20, "bookmaker": "Bwin"},
+            {"name": "Independiente Medellín", "price": 7.50, "bookmaker": "Pinnacle"}
+        ],
+        "profit_margin": 1.10,
+        "is_surebet": false,
+        "bet_to": "Flamengo",
+        "price": 1.50,
+        "bookmaker": "Bet365"
+    },
+    {
+        "sport_category": "Fútbol",
+        "sport": "CONMEBOL Libertadores",
+        "match": "Palmeiras vs Sporting Cristal",
+        "market_name": "Cara o Cruz (H2H)",
+        "outcomes": [
+            {"name": "Palmeiras", "price": 1.40, "bookmaker": "Codere"},
+            {"name": "Empate", "price": 4.50, "bookmaker": "Betfair"},
+            {"name": "Sporting Cristal", "price": 8.00, "bookmaker": "Pinnacle"}
+        ],
+        "profit_margin": 0.60,
+        "is_surebet": false,
+        "bet_to": "Palmeiras",
+        "price": 1.40,
+        "bookmaker": "Codere"
     }
 ]
