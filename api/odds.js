@@ -1,5 +1,23 @@
-const API_KEY = process.env.THE_ODDS_API_KEY;
+const API_KEYS = [
+  process.env.THE_ODDS_API_KEY_1,
+  process.env.THE_ODDS_API_KEY_2,
+  process.env.THE_ODDS_API_KEY_3,
+].filter(Boolean);
 const BASE_URL = 'https://api.the-odds-api.com/v4';
+
+// Encuentra la primera key con créditos
+async function getActiveKey() {
+  for (const key of API_KEYS) {
+    try {
+      const r = await fetch(`${BASE_URL}/sports/?apiKey=${key}`);
+      const remaining = r.headers.get('x-requests-remaining');
+      if (r.ok && remaining && Number(remaining) > 0) {
+        return { key, remaining };
+      }
+    } catch { /* skip */ }
+  }
+  return null;
+}
 
 // Categorías con cuántos torneos queremos de cada una (máx por categoría)
 const SPORT_CONFIG = [
@@ -75,11 +93,26 @@ export default async function handler(req, res) {
   // Cache 15 minutos para ahorrar créditos
   res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=300');
 
-  if (!API_KEY) {
-    return res.status(500).json({ error: 'API key not configured' });
+  if (API_KEYS.length === 0) {
+    return res.status(500).json({ error: 'API keys not configured' });
   }
 
   try {
+    // 0. Buscar una key con créditos
+    const activeKey = await getActiveKey();
+    if (!activeKey) {
+      return res.status(200).json({
+        signals: [],
+        meta: {
+          total: 0, surebets: 0, sports_checked: 0,
+          credits_remaining: '0',
+          updated_at: new Date().toISOString(),
+          no_credits: true,
+        },
+      });
+    }
+    const API_KEY = activeKey.key;
+
     // 1. Obtener deportes activos (NO gasta créditos)
     const sportsRes = await fetch(`${BASE_URL}/sports/?apiKey=${API_KEY}`);
     if (!sportsRes.ok) {
