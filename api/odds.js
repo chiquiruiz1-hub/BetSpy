@@ -40,12 +40,21 @@ function getSportCategory(sportKey) {
   return match ? match.label : 'Otros';
 }
 
+// Casas de apuestas del usuario
+const MY_BOOKMAKERS = ['Bet365', 'bwin'];
+
 function calcularArbitraje(event, sportKey) {
   if (!event.bookmakers || event.bookmakers.length === 0) return null;
 
+  // Filtrar solo las casas del usuario
+  const myBookmakers = event.bookmakers.filter(b =>
+    MY_BOOKMAKERS.some(mb => b.title.toLowerCase() === mb.toLowerCase())
+  );
+  if (myBookmakers.length < 2) return null;
+
   const bestOdds = {};
 
-  for (const bookmaker of event.bookmakers) {
+  for (const bookmaker of myBookmakers) {
     for (const market of bookmaker.markets) {
       if (market.key !== 'h2h') continue;
       for (const outcome of market.outcomes) {
