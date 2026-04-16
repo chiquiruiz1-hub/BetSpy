@@ -29,22 +29,49 @@ function App() {
   const refreshData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/odds');
-      if (res.ok) {
-        const data = await res.json();
+      // Llamar a ambas APIs en paralelo
+      const [oddsRes, footballRes] = await Promise.all([
+        fetch('/api/odds').catch(() => null),
+        fetch('/api/football-odds').catch(() => null),
+      ]);
+
+      let allSignals = [];
+      let mainMeta = null;
+
+      // The Odds API (multideporte)
+      if (oddsRes?.ok) {
+        const data = await oddsRes.json();
         if (data.signals.length > 0) {
-          setSignals(data.signals);
-          setMeta(data.meta);
-          setApiStatus('online');
-        } else {
-          // Sin créditos o sin señales: usar fallback
-          setSignals(signalsData);
-          setMeta(data.meta);
-          setApiStatus(data.meta?.no_credits ? 'no_credits' : 'cache');
+          allSignals.push(...data.signals);
+          mainMeta = data.meta;
+        } else if (data.meta?.no_credits) {
+          mainMeta = data.meta;
         }
+      }
+
+      // API-Football (fútbol gratis)
+      if (footballRes?.ok) {
+        const data = await footballRes.json();
+        if (data.signals.length > 0) {
+          allSignals.push(...data.signals);
+        }
+      }
+
+      if (allSignals.length > 0) {
+        // Eliminar duplicados por nombre de partido
+        const seen = new Set();
+        allSignals = allSignals.filter(s => {
+          if (seen.has(s.match)) return false;
+          seen.add(s.match);
+          return true;
+        });
+        setSignals(allSignals);
+        setMeta(mainMeta);
+        setApiStatus('online');
       } else {
         setSignals(signalsData);
-        setApiStatus('cache');
+        setMeta(mainMeta);
+        setApiStatus(mainMeta?.no_credits ? 'no_credits' : 'cache');
       }
     } catch {
       setSignals(signalsData);
