@@ -10,8 +10,11 @@ const BOOKMAKER_IDS = {
 async function fetchAPI(endpoint) {
   try {
     const r = await fetch(`${BASE_URL}${endpoint}`, {
+      method: 'GET',
       headers: {
         'x-apisports-key': API_KEY,
+        'x-rapidapi-key': API_KEY,
+        'x-rapidapi-host': 'v3.football.api-sports.io',
       },
     });
     const data = await r.json();
