@@ -113,7 +113,7 @@ export default async function handler(req, res) {
 
     const oddsPromises = limitedSports.map(async (sportKey) => {
       try {
-        const url = `${BASE_URL}/sports/${sportKey}/odds/?apiKey=${API_KEY}&regions=eu,uk&oddsFormat=decimal`;
+        const url = `${BASE_URL}/sports/${sportKey}/odds/?apiKey=${API_KEY}&regions=eu&oddsFormat=decimal`;
         const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
 
         // Capturar creditos del header (sin llamada extra)
