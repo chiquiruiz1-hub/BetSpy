@@ -1,29 +1,25 @@
 const API_KEY = process.env.THE_ODDS_API_KEY;
 const BASE_URL = 'https://api.the-odds-api.com/v4';
 
-// Categorías de deportes que nos interesan (por prefijo de sport_key)
-const WANTED_CATEGORIES = [
-  'soccer',
-  'basketball',
-  'tennis',
-  'icehockey',
-  'baseball',
-  'mma',
-  'boxing',
-  'rugby',
-  'handball',
-  'americanfootball',
+// Categorías con cuántos torneos queremos de cada una (máx por categoría)
+const SPORT_CONFIG = [
+  { prefix: 'soccer', label: 'Fútbol', slots: 6 },
+  { prefix: 'basketball', label: 'Basket', slots: 2 },
+  { prefix: 'tennis', label: 'Tenis', slots: 2 },
+  { prefix: 'icehockey', label: 'Hockey', slots: 2 },
+  { prefix: 'baseball', label: 'Béisbol', slots: 2 },
+  { prefix: 'mma', label: 'MMA', slots: 1 },
+  { prefix: 'boxing', label: 'Boxeo', slots: 1 },
+  { prefix: 'rugbyleague', label: 'Rugby', slots: 1 },
+  { prefix: 'handball', label: 'Balonmano', slots: 1 },
+  { prefix: 'americanfootball', label: 'Fútbol Americano', slots: 1 },
+  { prefix: 'cricket', label: 'Cricket', slots: 1 },
+  { prefix: 'aussierules', label: 'Aussie Rules', slots: 1 },
 ];
 
-// Mapeo de sport_key a categoría en español
 function getSportCategory(sportKey) {
-  if (sportKey.startsWith('soccer')) return 'Fútbol';
-  if (sportKey.startsWith('basketball')) return 'Basket';
-  if (sportKey.startsWith('tennis')) return 'Tenis';
-  if (sportKey.startsWith('icehockey')) return 'Hockey';
-  if (sportKey.startsWith('baseball')) return 'Béisbol';
-  if (sportKey.startsWith('mma')) return 'MMA';
-  return 'Otros';
+  const match = SPORT_CONFIG.find(c => sportKey.startsWith(c.prefix));
+  return match ? match.label : 'Otros';
 }
 
 function calcularArbitraje(event, sportKey) {
@@ -76,7 +72,7 @@ function calcularArbitraje(event, sportKey) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  // Cache 5 minutos para no gastar creditos en cada visita
+  // Cache 15 minutos para ahorrar créditos
   res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=300');
 
   if (!API_KEY) {
@@ -84,29 +80,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Obtener deportes activos (NO gasta creditos)
+    // 1. Obtener deportes activos (NO gasta créditos)
     const sportsRes = await fetch(`${BASE_URL}/sports/?apiKey=${API_KEY}`);
     if (!sportsRes.ok) {
       return res.status(sportsRes.status).json({ error: 'Error fetching sports' });
     }
     const allSports = await sportsRes.json();
-    // 2. Buscar todos los deportes activos que coincidan con nuestras categorías
-    const activeSports = allSports.filter(s =>
-      s.active && !s.has_outrights && WANTED_CATEGORIES.some(cat => s.key.startsWith(cat))
-    );
 
-    // Limitar a 12 para equilibrar cobertura vs créditos
-    const limitedSports = activeSports.map(s => s.key).slice(0, 12);
+    // 2. Seleccionar torneos activos respetando los slots por categoría
+    const sportsToFetch = [];
+    for (const config of SPORT_CONFIG) {
+      const matching = allSports.filter(s =>
+        s.active && !s.has_outrights && s.key.startsWith(config.prefix)
+      );
+      sportsToFetch.push(...matching.slice(0, config.slots).map(s => s.key));
+    }
 
     // 3. Descargar cuotas en paralelo
     let creditsRemaining = null;
 
-    const oddsPromises = limitedSports.map(async (sportKey) => {
+    const oddsPromises = sportsToFetch.map(async (sportKey) => {
       try {
         const url = `${BASE_URL}/sports/${sportKey}/odds/?apiKey=${API_KEY}&regions=eu&oddsFormat=decimal`;
         const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
 
-        // Capturar creditos del header (sin llamada extra)
         const rem = r.headers.get('x-requests-remaining');
         if (rem !== null) creditsRemaining = rem;
 
@@ -157,7 +154,7 @@ export default async function handler(req, res) {
       meta: {
         total: signals.length,
         surebets: signals.filter(s => s.is_surebet).length,
-        sports_checked: limitedSports.length,
+        sports_checked: sportsToFetch.length,
         credits_remaining: creditsRemaining,
         updated_at: new Date().toISOString(),
       },
