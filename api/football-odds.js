@@ -155,7 +155,7 @@ export default async function handler(req, res) {
         source: 'api-football',
         total: signals.length,
         surebets: signals.filter(s => s.is_surebet).length,
-        fixtures_checked: fixturesToCheck.length,
+        fixtures_checked: allFixtures.length,
         updated_at: new Date().toISOString(),
       },
     });
