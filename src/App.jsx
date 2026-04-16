@@ -8,7 +8,6 @@ import {
   Copy,
   Check,
   RefreshCcw,
-  Trophy,
   Activity,
   Layout,
   ChevronDown
@@ -16,7 +15,8 @@ import {
 import signalsData from './data/signals.json';
 
 function App() {
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedTournament, setSelectedTournament] = useState('all');
   const [signals, setSignals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
@@ -25,7 +25,6 @@ function App() {
   const [selectedSignal, setSelectedSignal] = useState(null);
   const [stake, setStake] = useState(100);
   const [meta, setMeta] = useState(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const refreshData = async () => {
     setLoading(true);
@@ -58,12 +57,17 @@ function App() {
     refreshData();
   }, []);
 
-  // Extraer deportes/torneos únicos de las señales reales
-  const sportsList = [...new Set(signals.map(s => s.sport))].sort();
+  // Extraer categorías y torneos únicos
+  const categories = [...new Set(signals.map(s => s.sport_category || 'Otros'))].sort();
+  const tournaments = selectedCategory === 'all'
+    ? [...new Set(signals.map(s => s.sport))].sort()
+    : [...new Set(signals.filter(s => (s.sport_category || 'Otros') === selectedCategory).map(s => s.sport))].sort();
 
-  const filteredSignals = activeFilter === 'all'
-    ? signals
-    : signals.filter(s => s.sport === activeFilter);
+  const filteredSignals = signals.filter(s => {
+    if (selectedCategory !== 'all' && (s.sport_category || 'Otros') !== selectedCategory) return false;
+    if (selectedTournament !== 'all' && s.sport !== selectedTournament) return false;
+    return true;
+  });
 
   const copyToClipboard = (id, text) => {
     navigator.clipboard.writeText(text);
@@ -108,58 +112,42 @@ function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={refreshData}
               className="p-3 bg-slate-900 border border-white/5 rounded-2xl text-slate-400 hover:text-white hover:border-emerald-500/30 transition-all group"
             >
               <RefreshCcw size={20} className={loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'} />
             </button>
+
+            {/* Desplegable Deporte */}
             <div className="relative">
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 bg-slate-900/50 backdrop-blur-xl border border-white/5 hover:border-emerald-500/30 px-4 py-3 rounded-2xl text-sm font-bold transition-all"
+              <select
+                value={selectedCategory}
+                onChange={(e) => { setSelectedCategory(e.target.value); setSelectedTournament('all'); }}
+                className="appearance-none bg-slate-900/50 backdrop-blur-xl border border-white/5 hover:border-emerald-500/30 pl-4 pr-10 py-3 rounded-2xl text-sm font-bold text-white transition-all cursor-pointer focus:outline-none focus:border-emerald-500/50"
               >
-                <Trophy size={16} className="text-emerald-500" />
-                <span className="text-white">
-                  {activeFilter === 'all' ? 'Todos los deportes' : activeFilter}
-                </span>
-                <ChevronDown size={16} className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {dropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute right-0 top-full mt-2 w-72 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/50 z-50 overflow-hidden max-h-80 overflow-y-auto"
-                >
-                  <button
-                    onClick={() => { setActiveFilter('all'); setDropdownOpen(false); }}
-                    className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center gap-3 transition-colors ${
-                      activeFilter === 'all' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-300 hover:bg-white/5'
-                    }`}
-                  >
-                    <Trophy size={16} />
-                    Todos los deportes
-                    <span className="ml-auto text-[10px] font-bold text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">{signals.length}</span>
-                  </button>
-                  {sportsList.map((sport) => {
-                    const count = signals.filter(s => s.sport === sport).length;
-                    return (
-                      <button
-                        key={sport}
-                        onClick={() => { setActiveFilter(sport); setDropdownOpen(false); }}
-                        className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center gap-3 transition-colors border-t border-white/5 ${
-                          activeFilter === sport ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-300 hover:bg-white/5'
-                        }`}
-                      >
-                        <Activity size={16} />
-                        {sport}
-                        <span className="ml-auto text-[10px] font-bold text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">{count}</span>
-                      </button>
-                    );
-                  })}
-                </motion.div>
-              )}
+                <option value="all">Todos los deportes</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat} ({signals.filter(s => (s.sport_category || 'Otros') === cat).length})</option>
+                ))}
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+
+            {/* Desplegable Torneo */}
+            <div className="relative">
+              <select
+                value={selectedTournament}
+                onChange={(e) => setSelectedTournament(e.target.value)}
+                className="appearance-none bg-slate-900/50 backdrop-blur-xl border border-white/5 hover:border-emerald-500/30 pl-4 pr-10 py-3 rounded-2xl text-sm font-bold text-white transition-all cursor-pointer focus:outline-none focus:border-emerald-500/50"
+              >
+                <option value="all">Todos los torneos ({tournaments.length})</option>
+                {tournaments.map(t => (
+                  <option key={t} value={t}>{t} ({signals.filter(s => s.sport === t).length})</option>
+                ))}
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
           </div>
         </header>

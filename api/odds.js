@@ -21,7 +21,18 @@ const PRIORITY_SPORTS = [
   'mma_mixed_martial_arts',
 ];
 
-function calcularArbitraje(event) {
+// Mapeo de sport_key a categoría en español
+function getSportCategory(sportKey) {
+  if (sportKey.startsWith('soccer')) return 'Fútbol';
+  if (sportKey.startsWith('basketball')) return 'Basket';
+  if (sportKey.startsWith('tennis')) return 'Tenis';
+  if (sportKey.startsWith('icehockey')) return 'Hockey';
+  if (sportKey.startsWith('baseball')) return 'Béisbol';
+  if (sportKey.startsWith('mma')) return 'MMA';
+  return 'Otros';
+}
+
+function calcularArbitraje(event, sportKey) {
   if (!event.bookmakers || event.bookmakers.length === 0) return null;
 
   const bestOdds = {};
@@ -53,6 +64,7 @@ function calcularArbitraje(event) {
   }));
 
   return {
+    sport_category: getSportCategory(sportKey),
     sport: event.sport_title,
     match: `${event.home_team} vs ${event.away_team}`,
     commence_time: event.commence_time,
@@ -68,17 +80,17 @@ function calcularArbitraje(event) {
 }
 
 export default async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
+  // Cache 5 minutos para no gastar creditos en cada visita
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=120');
 
   if (!API_KEY) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
   try {
-    // 1. Obtener deportes activos (no gasta creditos)
+    // 1. Obtener deportes activos (NO gasta creditos)
     const sportsRes = await fetch(`${BASE_URL}/sports/?apiKey=${API_KEY}`);
     if (!sportsRes.ok) {
       return res.status(sportsRes.status).json({ error: 'Error fetching sports' });
@@ -86,35 +98,39 @@ export default async function handler(req, res) {
     const allSports = await sportsRes.json();
     const activeSportKeys = new Set(allSports.filter(s => s.active).map(s => s.key));
 
-    // 2. Filtrar solo los deportes prioritarios que estan activos
+    // 2. Filtrar deportes prioritarios activos
     const sportsToFetch = PRIORITY_SPORTS.filter(key => activeSportKeys.has(key));
 
-    // Si no hay ninguno prioritario activo, buscar los primeros 8 activos
     if (sportsToFetch.length === 0) {
       const fallback = allSports.filter(s => s.active && !s.has_outrights).slice(0, 8);
       sportsToFetch.push(...fallback.map(s => s.key));
     }
 
-    // Limitar a 8 para no gastar demasiados creditos
     const limitedSports = sportsToFetch.slice(0, 8);
 
     // 3. Descargar cuotas en paralelo
+    let creditsRemaining = null;
+
     const oddsPromises = limitedSports.map(async (sportKey) => {
       try {
         const url = `${BASE_URL}/sports/${sportKey}/odds/?apiKey=${API_KEY}&regions=eu,uk&oddsFormat=decimal`;
         const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+
+        // Capturar creditos del header (sin llamada extra)
+        const rem = r.headers.get('x-requests-remaining');
+        if (rem !== null) creditsRemaining = rem;
+
         if (r.ok) {
-          return r.json();
+          const data = await r.json();
+          return { sportKey, events: data };
         }
-        // Si 401 o sin créditos, no seguir gastando
         if (r.status === 401 || r.status === 429) return 'NO_CREDITS';
-      } catch { /* skip failed sport */ }
-      return [];
+      } catch { /* skip */ }
+      return { sportKey, events: [] };
     });
 
     const rawResults = await Promise.all(oddsPromises);
 
-    // Si no hay créditos, devolver señal de sin créditos
     if (rawResults.some(r => r === 'NO_CREDITS')) {
       return res.status(200).json({
         signals: [],
@@ -129,30 +145,22 @@ export default async function handler(req, res) {
       });
     }
 
-    const allOddsResults = rawResults.filter(r => Array.isArray(r));
-
-    // 4. Calcular arbitraje para cada evento
+    // 4. Calcular arbitraje
     const signals = [];
-    for (const events of allOddsResults) {
-      for (const event of events) {
-        const signal = calcularArbitraje(event);
-        if (signal) {
-          signals.push(signal);
-        }
+    for (const result of rawResults) {
+      if (result === 'NO_CREDITS') continue;
+      for (const event of result.events) {
+        const signal = calcularArbitraje(event, result.sportKey);
+        if (signal) signals.push(signal);
       }
     }
 
-    // 5. Ordenar: surebets primero, luego por margen de beneficio descendente
+    // 5. Ordenar: surebets primero, luego por margen descendente
     signals.sort((a, b) => {
       if (a.is_surebet && !b.is_surebet) return -1;
       if (!a.is_surebet && b.is_surebet) return 1;
       return b.profit_margin - a.profit_margin;
     });
-
-    // 6. Obtener creditos restantes del ultimo request
-    const lastRes = await fetch(`${BASE_URL}/sports/?apiKey=${API_KEY}`);
-    const remaining = lastRes.headers.get('x-requests-remaining');
-    const used = lastRes.headers.get('x-requests-used');
 
     return res.status(200).json({
       signals,
@@ -160,8 +168,7 @@ export default async function handler(req, res) {
         total: signals.length,
         surebets: signals.filter(s => s.is_surebet).length,
         sports_checked: limitedSports.length,
-        credits_remaining: remaining,
-        credits_used: used,
+        credits_remaining: creditsRemaining,
         updated_at: new Date().toISOString(),
       },
     });
