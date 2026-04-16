@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Zap, 
-  Search, 
-  TrendingUp, 
-  ShieldCheck, 
-  Clock, 
-  Copy, 
-  Check, 
+import {
+  Zap,
+  TrendingUp,
+  ShieldCheck,
+  Clock,
+  Copy,
+  Check,
   RefreshCcw,
   Trophy,
   Activity,
@@ -32,14 +31,28 @@ function App() {
   const [showCalc, setShowCalc] = useState(false);
   const [selectedSignal, setSelectedSignal] = useState(null);
   const [stake, setStake] = useState(100);
-  
-  const refreshData = () => {
+  const [meta, setMeta] = useState(null);
+
+  const refreshData = async () => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/odds');
+      if (res.ok) {
+        const data = await res.json();
+        setSignals(data.signals);
+        setMeta(data.meta);
+        setApiStatus(data.signals.length > 0 ? 'online' : 'empty');
+      } else {
+        // Fallback a datos locales si la API falla
+        setSignals(signalsData);
+        setApiStatus('cache');
+      }
+    } catch {
+      // Sin conexion: usar datos locales
       setSignals(signalsData);
-      setLoading(false);
-      if (signalsData.length === 0) setApiStatus('limit');
-    }, 1500);
+      setApiStatus('cache');
+    }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -83,9 +96,9 @@ function App() {
                 BETSPY <span className="text-emerald-500">PRO</span>
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`w-2 h-2 rounded-full animate-pulse ${apiStatus === 'online' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                <span className={`w-2 h-2 rounded-full animate-pulse ${apiStatus === 'online' ? 'bg-emerald-500' : apiStatus === 'empty' ? 'bg-amber-500' : 'bg-red-500'}`} />
                 <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">
-                  {apiStatus === 'online' ? 'Radar Live: Datos en Tiempo Real' : 'Radar: Modo Caché (Límite API)'}
+                  {apiStatus === 'online' ? `Radar Live: ${signals.length} señales en tiempo real` : apiStatus === 'empty' ? 'Radar Live: Sin señales activas' : 'Radar: Modo Caché (API offline)'}
                 </span>
               </div>
             </div>
