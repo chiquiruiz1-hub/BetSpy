@@ -10,20 +10,13 @@ import {
   RefreshCcw,
   Trophy,
   Activity,
-  Layout
+  Layout,
+  ChevronDown
 } from 'lucide-react';
 import signalsData from './data/signals.json';
 
-const SPORTS = [
-  { id: 'all', label: 'Dashboard', icon: Trophy },
-  { id: 'soccer', label: 'Fútbol', icon: Activity },
-  { id: 'basketball', label: 'Basket', icon: Layout },
-  { id: 'tennis', label: 'Tenis', icon: Zap },
-  { id: 'others', label: 'Otros', icon: ShieldCheck },
-];
-
 function App() {
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [signals, setSignals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
@@ -32,6 +25,7 @@ function App() {
   const [selectedSignal, setSelectedSignal] = useState(null);
   const [stake, setStake] = useState(100);
   const [meta, setMeta] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const refreshData = async () => {
     setLoading(true);
@@ -64,16 +58,12 @@ function App() {
     refreshData();
   }, []);
 
-  const filteredSignals = activeTab === 'all' 
-    ? signals 
-    : signals.filter(s => {
-        const sport = s.sport.toLowerCase();
-        if (activeTab === 'soccer') return sport.includes('liga') || sport.includes('soccer') || sport.includes('champions') || sport.includes('bundesliga') || sport.includes('serie a');
-        if (activeTab === 'basketball') return sport.includes('nba') || sport.includes('basket') || sport.includes('euroleague');
-        if (activeTab === 'tennis') return sport.includes('tennis');
-        if (activeTab === 'others') return !sport.includes('soccer') && !sport.includes('basket') && !sport.includes('nba') && !sport.includes('tennis');
-        return true;
-      });
+  // Extraer deportes/torneos únicos de las señales reales
+  const sportsList = [...new Set(signals.map(s => s.sport))].sort();
+
+  const filteredSignals = activeFilter === 'all'
+    ? signals
+    : signals.filter(s => s.sport === activeFilter);
 
   const copyToClipboard = (id, text) => {
     navigator.clipboard.writeText(text);
@@ -119,30 +109,57 @@ function App() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={refreshData}
               className="p-3 bg-slate-900 border border-white/5 rounded-2xl text-slate-400 hover:text-white hover:border-emerald-500/30 transition-all group"
             >
               <RefreshCcw size={20} className={loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'} />
             </button>
-            <div className="flex items-center gap-3 bg-slate-900/50 backdrop-blur-xl border border-white/5 p-2 rounded-2xl">
-              {SPORTS.map((sport) => {
-                const Icon = sport.icon;
-                return (
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 bg-slate-900/50 backdrop-blur-xl border border-white/5 hover:border-emerald-500/30 px-4 py-3 rounded-2xl text-sm font-bold transition-all"
+              >
+                <Trophy size={16} className="text-emerald-500" />
+                <span className="text-white">
+                  {activeFilter === 'all' ? 'Todos los deportes' : activeFilter}
+                </span>
+                <ChevronDown size={16} className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {dropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute right-0 top-full mt-2 w-72 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/50 z-50 overflow-hidden max-h-80 overflow-y-auto"
+                >
                   <button
-                    key={sport.id}
-                    onClick={() => setActiveTab(sport.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 font-bold text-sm ${
-                      activeTab === sport.id 
-                        ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20' 
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    onClick={() => { setActiveFilter('all'); setDropdownOpen(false); }}
+                    className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center gap-3 transition-colors ${
+                      activeFilter === 'all' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-300 hover:bg-white/5'
                     }`}
                   >
-                    <Icon size={16} />
-                    <span className="hidden sm:inline">{sport.label}</span>
+                    <Trophy size={16} />
+                    Todos los deportes
+                    <span className="ml-auto text-[10px] font-bold text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">{signals.length}</span>
                   </button>
-                );
-              })}
+                  {sportsList.map((sport) => {
+                    const count = signals.filter(s => s.sport === sport).length;
+                    return (
+                      <button
+                        key={sport}
+                        onClick={() => { setActiveFilter(sport); setDropdownOpen(false); }}
+                        className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center gap-3 transition-colors border-t border-white/5 ${
+                          activeFilter === sport ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-300 hover:bg-white/5'
+                        }`}
+                      >
+                        <Activity size={16} />
+                        {sport}
+                        <span className="ml-auto text-[10px] font-bold text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">{count}</span>
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
             </div>
           </div>
         </header>
