@@ -43,57 +43,79 @@ function getSportCategory(sportKey) {
 // Casas de apuestas del usuario
 const MY_BOOKMAKERS = ['Bet365', 'bwin'];
 
-function calcularArbitraje(event, sportKey) {
-  if (!event.bookmakers || event.bookmakers.length === 0) return null;
+// Mercados que pedimos a la API (cada uno cuesta 1 crédito por torneo)
+const MARKETS = ['h2h', 'totals'];
 
-  // Filtrar solo las casas del usuario
+function getMarketName(key, point) {
+  switch (key) {
+    case 'h2h': return 'Cara o Cruz (H2H)';
+    case 'totals': return point != null ? `Más/Menos ${point}` : 'Más/Menos';
+    case 'spreads': return point != null ? `Hándicap ${point}` : 'Hándicap';
+    default: return key;
+  }
+}
+
+// Devuelve un array de señales (una por mercado/punto detectado)
+function calcularArbitrajes(event, sportKey) {
+  if (!event.bookmakers || event.bookmakers.length === 0) return [];
+
   const myBookmakers = event.bookmakers.filter(b =>
     MY_BOOKMAKERS.some(mb => b.title.toLowerCase() === mb.toLowerCase())
   );
-  if (myBookmakers.length < 2) return null;
+  if (myBookmakers.length < 2) return [];
 
-  const bestOdds = {};
-
-  for (const bookmaker of myBookmakers) {
-    for (const market of bookmaker.markets) {
-      if (market.key !== 'h2h') continue;
+  // Agrupar por (market_key, point) para no mezclar Over 2.5 con Over 3.5
+  const groups = new Map();
+  for (const bk of myBookmakers) {
+    for (const market of bk.markets) {
       for (const outcome of market.outcomes) {
+        const point = outcome.point ?? null;
+        const groupKey = `${market.key}::${point ?? ''}`;
+        if (!groups.has(groupKey)) {
+          groups.set(groupKey, { marketKey: market.key, point, bestOdds: {} });
+        }
+        const group = groups.get(groupKey);
         const name = outcome.name;
-        const price = outcome.price;
-        if (!bestOdds[name] || price > bestOdds[name].price) {
-          bestOdds[name] = { price, bookmaker: bookmaker.title };
+        if (!group.bestOdds[name] || outcome.price > group.bestOdds[name].price) {
+          group.bestOdds[name] = { price: outcome.price, bookmaker: bk.title };
         }
       }
     }
   }
 
-  const outcomesList = Object.entries(bestOdds);
-  if (outcomesList.length < 2) return null;
+  const signals = [];
+  for (const { marketKey, point, bestOdds } of groups.values()) {
+    const outcomesList = Object.entries(bestOdds);
+    if (outcomesList.length < 2) continue;
+    // Solo considerar grupos con al menos una cuota de cada casa distinta
+    const distinctBooks = new Set(outcomesList.map(([, d]) => d.bookmaker));
+    if (distinctBooks.size < 2) continue;
 
-  const invSum = outcomesList.reduce((acc, [, data]) => acc + 1 / data.price, 0);
-  const profit = (1 / invSum - 1) * 100;
-  const isSurebet = invSum < 1.0;
+    const invSum = outcomesList.reduce((acc, [, d]) => acc + 1 / d.price, 0);
+    const profit = (1 / invSum - 1) * 100;
+    const outcomes = outcomesList.map(([name, data]) => ({
+      name,
+      price: data.price,
+      bookmaker: data.bookmaker,
+    }));
 
-  const outcomes = outcomesList.map(([name, data]) => ({
-    name,
-    price: data.price,
-    bookmaker: data.bookmaker,
-  }));
+    signals.push({
+      sport_category: getSportCategory(sportKey),
+      sport: event.sport_title,
+      match: `${event.home_team} vs ${event.away_team}`,
+      commence_time: event.commence_time,
+      market_key: marketKey,
+      market_name: getMarketName(marketKey, point),
+      outcomes,
+      profit_margin: Math.round(profit * 100) / 100,
+      is_surebet: invSum < 1,
+      bet_to: outcomes[0].name,
+      price: outcomes[0].price,
+      bookmaker: outcomes[0].bookmaker,
+    });
+  }
 
-  return {
-    sport_category: getSportCategory(sportKey),
-    sport: event.sport_title,
-    match: `${event.home_team} vs ${event.away_team}`,
-    commence_time: event.commence_time,
-    market_key: 'h2h',
-    market_name: 'Cara o Cruz (H2H)',
-    outcomes,
-    profit_margin: Math.round(profit * 100) / 100,
-    is_surebet: isSurebet,
-    bet_to: outcomes[0].name,
-    price: outcomes[0].price,
-    bookmaker: outcomes[0].bookmaker,
-  };
+  return signals;
 }
 
 export default async function handler(req, res) {
@@ -143,7 +165,7 @@ export default async function handler(req, res) {
 
     const oddsPromises = sportsToFetch.map(async (sportKey) => {
       try {
-        const url = `${BASE_URL}/sports/${sportKey}/odds/?apiKey=${API_KEY}&regions=eu&oddsFormat=decimal`;
+        const url = `${BASE_URL}/sports/${sportKey}/odds/?apiKey=${API_KEY}&regions=eu&oddsFormat=decimal&markets=${MARKETS.join(',')}`;
         const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
 
         const rem = r.headers.get('x-requests-remaining');
@@ -174,13 +196,12 @@ export default async function handler(req, res) {
       });
     }
 
-    // 4. Calcular arbitraje
+    // 4. Calcular arbitraje (puede haber varias señales por evento, una por mercado)
     const signals = [];
     for (const result of rawResults) {
       if (result === 'NO_CREDITS') continue;
       for (const event of result.events) {
-        const signal = calcularArbitraje(event, result.sportKey);
-        if (signal) signals.push(signal);
+        signals.push(...calcularArbitrajes(event, result.sportKey));
       }
     }
 

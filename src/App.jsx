@@ -16,6 +16,17 @@ import {
 } from 'lucide-react';
 import signalsData from './data/signals.json';
 
+// Recalcula margen y surebet desde las cuotas reales para evitar discrepancias
+// entre lo que muestra la app y lo que el usuario cobraría apostando.
+function recomputeMargins(signals) {
+  return signals.map(s => {
+    if (!s.outcomes || s.outcomes.length < 2) return s;
+    const invSum = s.outcomes.reduce((acc, o) => acc + 1 / o.price, 0);
+    const profit_margin = Math.round((1 / invSum - 1) * 10000) / 100;
+    return { ...s, profit_margin, is_surebet: invSum < 1 };
+  });
+}
+
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTournament, setSelectedTournament] = useState('all');
@@ -61,22 +72,23 @@ function App() {
       if (allSignals.length > 0) {
         const bestByMatch = new Map();
         for (const s of allSignals) {
-          const prev = bestByMatch.get(s.match);
+          const key = `${s.match}::${s.market_name || ''}`;
+          const prev = bestByMatch.get(key);
           if (!prev || s.profit_margin > prev.profit_margin) {
-            bestByMatch.set(s.match, s);
+            bestByMatch.set(key, s);
           }
         }
         allSignals = [...bestByMatch.values()];
-        setSignals(allSignals);
+        setSignals(recomputeMargins(allSignals));
         setMeta(mainMeta);
         setApiStatus('online');
       } else {
-        setSignals(signalsData);
+        setSignals(recomputeMargins(signalsData));
         setMeta(mainMeta);
         setApiStatus(mainMeta?.no_credits ? 'no_credits' : 'cache');
       }
     } catch {
-      setSignals(signalsData);
+      setSignals(recomputeMargins(signalsData));
       setApiStatus('cache');
     }
     setLastUpdated(new Date());

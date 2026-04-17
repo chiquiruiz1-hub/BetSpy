@@ -5,14 +5,14 @@
         "match": "Aston Villa vs Bologna",
         "market_name": "Cara o Cruz (H2H)",
         "outcomes": [
-            {"name": "Aston Villa", "price": 1.85, "bookmaker": "Bet365"},
-            {"name": "Empate", "price": 3.60, "bookmaker": "Bwin"},
-            {"name": "Bologna", "price": 5.20, "bookmaker": "Bet365"}
+            {"name": "Aston Villa", "price": 1.90, "bookmaker": "Bet365"},
+            {"name": "Empate", "price": 4.00, "bookmaker": "Bwin"},
+            {"name": "Bologna", "price": 4.80, "bookmaker": "Bet365"}
         ],
-        "profit_margin": 3.42,
+        "profit_margin": 1.56,
         "is_surebet": true,
         "bet_to": "Aston Villa",
-        "price": 1.85,
+        "price": 1.90,
         "bookmaker": "Bet365"
     },
     {
@@ -21,14 +21,14 @@
         "match": "Nottingham Forest vs FC Porto",
         "market_name": "Cara o Cruz (H2H)",
         "outcomes": [
-            {"name": "Nottingham Forest", "price": 2.45, "bookmaker": "Bwin"},
+            {"name": "Nottingham Forest", "price": 2.50, "bookmaker": "Bwin"},
             {"name": "Empate", "price": 3.30, "bookmaker": "Bet365"},
             {"name": "FC Porto", "price": 3.10, "bookmaker": "Bwin"}
         ],
-        "profit_margin": 1.87,
+        "profit_margin": -2.5,
         "is_surebet": false,
         "bet_to": "Nottingham Forest",
-        "price": 2.45,
+        "price": 2.50,
         "bookmaker": "Bwin"
     },
     {
@@ -41,7 +41,7 @@
             {"name": "Empate", "price": 3.40, "bookmaker": "Bwin"},
             {"name": "SC Freiburg", "price": 3.75, "bookmaker": "Bwin"}
         ],
-        "profit_margin": 2.15,
+        "profit_margin": -3.57,
         "is_surebet": false,
         "bet_to": "Celta Vigo",
         "price": 2.10,
@@ -57,7 +57,7 @@
             {"name": "Empate", "price": 3.50, "bookmaker": "Bwin"},
             {"name": "Braga", "price": 4.50, "bookmaker": "Bet365"}
         ],
-        "profit_margin": 1.65,
+        "profit_margin": -3.31,
         "is_surebet": false,
         "bet_to": "Real Betis",
         "price": 1.90,
@@ -69,14 +69,14 @@
         "match": "Chelsea vs Manchester United",
         "market_name": "Cara o Cruz (H2H)",
         "outcomes": [
-            {"name": "Chelsea", "price": 2.15, "bookmaker": "Bet365"},
+            {"name": "Chelsea", "price": 2.20, "bookmaker": "Bet365"},
             {"name": "Empate", "price": 3.40, "bookmaker": "Bwin"},
             {"name": "Manchester United", "price": 3.50, "bookmaker": "Bwin"}
         ],
-        "profit_margin": 1.30,
+        "profit_margin": -3.32,
         "is_surebet": false,
         "bet_to": "Chelsea",
-        "price": 2.15,
+        "price": 2.20,
         "bookmaker": "Bet365"
     },
     {
@@ -85,14 +85,14 @@
         "match": "Everton vs Liverpool",
         "market_name": "Cara o Cruz (H2H)",
         "outcomes": [
-            {"name": "Everton", "price": 4.80, "bookmaker": "Bwin"},
-            {"name": "Empate", "price": 3.90, "bookmaker": "Bet365"},
-            {"name": "Liverpool", "price": 1.72, "bookmaker": "Bet365"}
+            {"name": "Everton", "price": 5.20, "bookmaker": "Bwin"},
+            {"name": "Empate", "price": 4.20, "bookmaker": "Bet365"},
+            {"name": "Liverpool", "price": 1.85, "bookmaker": "Bet365"}
         ],
-        "profit_margin": 4.10,
+        "profit_margin": 2.99,
         "is_surebet": true,
         "bet_to": "Liverpool",
-        "price": 1.72,
+        "price": 1.85,
         "bookmaker": "Bet365"
     },
     {
@@ -102,10 +102,10 @@
         "market_name": "Cara o Cruz (H2H)",
         "outcomes": [
             {"name": "Manchester City", "price": 2.25, "bookmaker": "Bwin"},
-            {"name": "Empate", "price": 3.30, "bookmaker": "Bet365"},
+            {"name": "Empate", "price": 3.50, "bookmaker": "Bet365"},
             {"name": "Arsenal", "price": 3.40, "bookmaker": "Bet365"}
         ],
-        "profit_margin": 1.75,
+        "profit_margin": -2.37,
         "is_surebet": false,
         "bet_to": "Manchester City",
         "price": 2.25,
@@ -118,9 +118,9 @@
         "market_name": "Moneyline",
         "outcomes": [
             {"name": "Charlotte Hornets", "price": 2.40, "bookmaker": "Bwin"},
-            {"name": "Orlando Magic", "price": 1.58, "bookmaker": "Bet365"}
+            {"name": "Orlando Magic", "price": 1.65, "bookmaker": "Bet365"}
         ],
-        "profit_margin": -1.20,
+        "profit_margin": -2.22,
         "is_surebet": false,
         "bet_to": "Charlotte Hornets",
         "price": 2.40,
@@ -135,7 +135,7 @@
             {"name": "Golden State Warriors", "price": 2.10, "bookmaker": "Bet365"},
             {"name": "Phoenix Suns", "price": 1.75, "bookmaker": "Bwin"}
         ],
-        "profit_margin": -2.85,
+        "profit_margin": -4.55,
         "is_surebet": false,
         "bet_to": "Golden State Warriors",
         "price": 2.10,
@@ -147,13 +147,13 @@
         "match": "Houston Rockets vs Los Angeles Lakers",
         "market_name": "Moneyline",
         "outcomes": [
-            {"name": "Houston Rockets", "price": 1.90, "bookmaker": "Bet365"},
-            {"name": "Los Angeles Lakers", "price": 1.95, "bookmaker": "Bwin"}
+            {"name": "Houston Rockets", "price": 2.05, "bookmaker": "Bet365"},
+            {"name": "Los Angeles Lakers", "price": 2.05, "bookmaker": "Bwin"}
         ],
-        "profit_margin": 2.56,
+        "profit_margin": 2.5,
         "is_surebet": true,
         "bet_to": "Houston Rockets",
-        "price": 1.90,
+        "price": 2.05,
         "bookmaker": "Bet365"
     },
     {
@@ -165,7 +165,7 @@
             {"name": "Carlos Alcaraz", "price": 1.55, "bookmaker": "Bet365"},
             {"name": "Alexander Zverev", "price": 2.50, "bookmaker": "Bwin"}
         ],
-        "profit_margin": 1.23,
+        "profit_margin": -4.32,
         "is_surebet": false,
         "bet_to": "Carlos Alcaraz",
         "price": 1.55,
@@ -177,13 +177,13 @@
         "match": "H. Rune vs S. Tsitsipas",
         "market_name": "Ganador del Partido",
         "outcomes": [
-            {"name": "Holger Rune", "price": 1.80, "bookmaker": "Bwin"},
+            {"name": "Holger Rune", "price": 2.05, "bookmaker": "Bwin"},
             {"name": "Stefanos Tsitsipas", "price": 2.05, "bookmaker": "Bet365"}
         ],
-        "profit_margin": 3.95,
+        "profit_margin": 2.5,
         "is_surebet": true,
         "bet_to": "Holger Rune",
-        "price": 1.80,
+        "price": 2.05,
         "bookmaker": "Bwin"
     }
 ]
