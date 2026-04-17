@@ -222,7 +222,8 @@ function App() {
 
   // Estadísticas rápidas
   const surebetCount = filteredSignals.filter(s => s.is_surebet).length;
-  const profitableCount = filteredSignals.filter(s => s.profit_margin > 0).length;
+  const bestRoi = filteredSignals.reduce((max, s) =>
+    s.profit_margin > max ? s.profit_margin : max, -Infinity);
 
   const copyToClipboard = (id, text) => {
     navigator.clipboard.writeText(text);
@@ -340,18 +341,27 @@ function App() {
 
         {/* Stats Bar + Filter */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2 bg-slate-900/50 border border-white/5 px-4 py-2 rounded-2xl">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Señales</span>
-              <span className="text-lg font-black text-white">{filteredSignals.length}</span>
+              <span className="text-lg font-black text-white">
+                {filteredSignals.length}
+                {signals.length !== filteredSignals.length && (
+                  <span className="text-slate-500 text-sm font-bold"> / {signals.length}</span>
+                )}
+              </span>
             </div>
             <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-2xl">
               <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Surebets</span>
               <span className="text-lg font-black text-emerald-400">{surebetCount}</span>
             </div>
             <div className="flex items-center gap-2 bg-slate-900/50 border border-white/5 px-4 py-2 rounded-2xl">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Rentables</span>
-              <span className="text-lg font-black text-amber-400">{profitableCount}</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Mejor ROI</span>
+              <span className={`text-lg font-black ${
+                bestRoi > 2 ? 'text-emerald-400' : bestRoi > 0 ? 'text-amber-400' : 'text-slate-600'
+              }`}>
+                {filteredSignals.length === 0 ? '—' : `${bestRoi > 0 ? '+' : ''}${bestRoi.toFixed(2)}%`}
+              </span>
             </div>
           </div>
           <button
