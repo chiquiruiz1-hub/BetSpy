@@ -806,7 +806,7 @@ function App() {
         {/* Footer */}
         <footer className="mt-20 border-t border-white/5 pt-8 pb-12 flex flex-col md:flex-row items-center justify-between gap-6 opacity-50">
           <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em]">
-            <ShieldCheck size={14} className="text-emerald-500" /> Solo Bet365 & Bwin
+            <ShieldCheck size={14} className="text-emerald-500" /> Mercado global · 15+ casas
           </div>
           <div className="text-xs text-slate-500 italic">
             BetSpy Pro v5.0 — Verifica siempre las cuotas antes de apostar.

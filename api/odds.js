@@ -44,9 +44,6 @@ function getSportCategory(sportKey) {
   return match ? match.label : 'Otros';
 }
 
-// Casas de apuestas del usuario
-const MY_BOOKMAKERS = ['Bet365', 'bwin'];
-
 // Mercados que pedimos a la API (cada uno cuesta 1 crédito por torneo)
 const MARKETS = ['h2h', 'totals'];
 
@@ -61,16 +58,11 @@ function getMarketName(key, point) {
 
 // Devuelve un array de señales (una por mercado/punto detectado)
 function calcularArbitrajes(event, sportKey) {
-  if (!event.bookmakers || event.bookmakers.length === 0) return [];
-
-  const myBookmakers = event.bookmakers.filter(b =>
-    MY_BOOKMAKERS.some(mb => b.title.toLowerCase() === mb.toLowerCase())
-  );
-  if (myBookmakers.length < 2) return [];
+  if (!event.bookmakers || event.bookmakers.length < 2) return [];
 
   // Agrupar por (market_key, point) para no mezclar Over 2.5 con Over 3.5
   const groups = new Map();
-  for (const bk of myBookmakers) {
+  for (const bk of event.bookmakers) {
     for (const market of bk.markets) {
       for (const outcome of market.outcomes) {
         const point = outcome.point ?? null;

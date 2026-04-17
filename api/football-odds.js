@@ -42,18 +42,12 @@ async function fetchAPI(endpoint) {
 }
 
 function calcularArbitraje(fixture, oddsData) {
-  if (!oddsData || !oddsData.bookmakers) return null;
+  if (!oddsData || !oddsData.bookmakers || oddsData.bookmakers.length < 2) return null;
 
-  // Filtrar solo Bet365 y Bwin
-  const myBookmakers = oddsData.bookmakers.filter(b =>
-    [BOOKMAKER_IDS.bet365, BOOKMAKER_IDS.bwin].includes(b.id)
-  );
-  if (myBookmakers.length < 2) return null;
-
-  // Buscar mercado "Match Winner" (1X2)
+  // Buscar mercado "Match Winner" (1X2) en cualquier casa disponible
   const bestOdds = {};
 
-  for (const bk of myBookmakers) {
+  for (const bk of oddsData.bookmakers) {
     const matchWinner = bk.bets.find(b => b.id === 1); // bet id 1 = Match Winner
     if (!matchWinner) continue;
 
