@@ -146,12 +146,43 @@ function App() {
     return `hace ${minutes} min`;
   };
 
-  // Actualizar el "hace X min" cada 30 segundos
+  // Tiempo restante hasta la próxima auto-actualización
+  const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+  const getTimeToNextRefresh = () => {
+    if (!lastUpdated || loading) return null;
+    const remaining = REFRESH_INTERVAL_MS - (Date.now() - lastUpdated.getTime());
+    if (remaining <= 0) return 'actualizando…';
+    const min = Math.floor(remaining / 60000);
+    const sec = Math.floor((remaining % 60000) / 1000);
+    return `próx. ${min}:${String(sec).padStart(2, '0')}`;
+  };
+
+  // Tick cada 10s: actualiza textos relativos y dispara auto-refresh si toca
   const [, setTick] = useState(0);
   useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 30000);
+    const interval = setInterval(() => {
+      setTick(t => t + 1);
+      if (document.visibilityState === 'visible' && lastUpdated && !loading &&
+          Date.now() - lastUpdated.getTime() >= REFRESH_INTERVAL_MS) {
+        refreshData();
+      }
+    }, 10000);
     return () => clearInterval(interval);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastUpdated, loading]);
+
+  // Al volver a la pestaña tras estar oculta, refresca si ya caducó
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && lastUpdated && !loading &&
+          Date.now() - lastUpdated.getTime() >= REFRESH_INTERVAL_MS) {
+        refreshData();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastUpdated, loading]);
 
   const ALL_CATEGORIES = [
     { id: 'Fútbol', tournaments: ['La Liga', 'Premier League', 'Bundesliga', 'Serie A', 'Ligue 1', 'UEFA Champions League', 'UEFA Europa League', 'UEFA Conference League', 'CONMEBOL Libertadores', 'CONMEBOL Sudamericana', 'MLS', 'Liga MX', 'Eredivisie', 'Liga Portugal', 'Super Lig'] },
@@ -232,6 +263,11 @@ function App() {
                 {lastUpdated && (
                   <span className="text-[10px] text-slate-600">
                     · Actualizado {getTimeAgo()}
+                  </span>
+                )}
+                {getTimeToNextRefresh() && (
+                  <span className="text-[10px] text-slate-600">
+                    · {getTimeToNextRefresh()}
                   </span>
                 )}
                 {meta?.credits_remaining != null && (
