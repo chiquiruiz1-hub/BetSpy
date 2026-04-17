@@ -59,12 +59,14 @@ function App() {
       }
 
       if (allSignals.length > 0) {
-        const seen = new Set();
-        allSignals = allSignals.filter(s => {
-          if (seen.has(s.match)) return false;
-          seen.add(s.match);
-          return true;
-        });
+        const bestByMatch = new Map();
+        for (const s of allSignals) {
+          const prev = bestByMatch.get(s.match);
+          if (!prev || s.profit_margin > prev.profit_margin) {
+            bestByMatch.set(s.match, s);
+          }
+        }
+        allSignals = [...bestByMatch.values()];
         setSignals(allSignals);
         setMeta(mainMeta);
         setApiStatus('online');
@@ -128,7 +130,7 @@ function App() {
   const filteredSignals = signals.filter(s => {
     if (selectedCategory !== 'all' && (s.sport_category || 'Otros') !== selectedCategory) return false;
     if (selectedTournament !== 'all' && s.sport !== selectedTournament) return false;
-    if (showOnlyProfitable && s.profit_margin < 0) return false;
+    if (showOnlyProfitable && s.profit_margin <= 0) return false;
     return true;
   });
 
@@ -445,7 +447,7 @@ function App() {
                     </div>
 
                     <div className="space-y-3">
-                      {selectedSignal.outcomes && selectedSignal.outcomes.map((outcome, oIdx) => {
+                      {selectedSignal.outcomes ? selectedSignal.outcomes.map((outcome, oIdx) => {
                         const invSum = selectedSignal.outcomes.reduce((acc, o) => acc + (1/o.price), 0);
                         const individualStake = (stake * (1/outcome.price)) / invSum;
 
@@ -464,7 +466,21 @@ function App() {
                             </div>
                           </div>
                         );
-                      })}
+                      }) : (
+                        <div className="bg-slate-950 p-4 rounded-2xl border border-white/5 flex justify-between items-center">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+                              Cuota única ({selectedSignal.bookmaker})
+                            </span>
+                            <div className="text-lg font-black text-white">{selectedSignal.bet_to}</div>
+                            <div className="text-[10px] text-slate-400 mt-1 italic">Cuota @{selectedSignal.price.toFixed(2)}</div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest block mb-1">Apostar</span>
+                            <div className="text-xl font-black text-white">€{Number(stake).toFixed(2)}</div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className={`p-5 rounded-[24px] border flex justify-between items-center ${
@@ -499,7 +515,7 @@ function App() {
                           <span className="text-sm font-bold">Instrucciones</span>
                         </div>
                         <div className="text-xs text-slate-400 leading-relaxed space-y-2">
-                          {selectedSignal.outcomes && selectedSignal.outcomes.map((outcome, oIdx) => {
+                          {selectedSignal.outcomes ? selectedSignal.outcomes.map((outcome, oIdx) => {
                             const invSum = selectedSignal.outcomes.reduce((acc, o) => acc + (1/o.price), 0);
                             const individualStake = (stake * (1/outcome.price)) / invSum;
                             return (
@@ -507,7 +523,11 @@ function App() {
                                 {oIdx + 1}. Apuesta <strong>€{individualStake.toFixed(2)}</strong> a <strong>{outcome.name}</strong> en <strong>{outcome.bookmaker}</strong> @{outcome.price.toFixed(2)}
                               </p>
                             );
-                          })}
+                          }) : (
+                            <p>
+                              Apuesta <strong>€{Number(stake).toFixed(2)}</strong> a <strong>{selectedSignal.bet_to}</strong> en <strong>{selectedSignal.bookmaker}</strong> @{selectedSignal.price.toFixed(2)}
+                            </p>
+                          )}
                         </div>
                       </div>
                     )}
