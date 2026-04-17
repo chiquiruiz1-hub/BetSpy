@@ -148,6 +148,26 @@ export default async function handler(req, res) {
       }
     }
 
+    // Diagnóstico: contar cuántos matches tienen cada casa
+    let withBet365 = 0, withBwin = 0, withBoth = 0, withAnyBook = 0;
+    const bookmakerCounts = {};
+    for (const [, item] of oddsMap) {
+      const books = item.bookmakers || [];
+      if (books.length > 0) withAnyBook++;
+      const hasBet365 = books.some(b => b.id === BOOKMAKER_IDS.bet365);
+      const hasBwin = books.some(b => b.id === BOOKMAKER_IDS.bwin);
+      if (hasBet365) withBet365++;
+      if (hasBwin) withBwin++;
+      if (hasBet365 && hasBwin) withBoth++;
+      for (const b of books) {
+        bookmakerCounts[b.name] = (bookmakerCounts[b.name] || 0) + 1;
+      }
+    }
+    const topBookmakers = Object.entries(bookmakerCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([name, count]) => ({ name, count }));
+
     const signals = [];
 
     // 3. Cruzar partidos con cuotas
@@ -173,6 +193,13 @@ export default async function handler(req, res) {
         total: signals.length,
         surebets: signals.filter(s => s.is_surebet).length,
         fixtures_checked: allFixtures.length,
+        odds_entries: oddsMap.size,
+        odds_paging: oddsPages?.paging || null,
+        with_any_bookmaker: withAnyBook,
+        with_bet365: withBet365,
+        with_bwin: withBwin,
+        with_both: withBoth,
+        top_bookmakers: topBookmakers,
         updated_at: new Date().toISOString(),
       },
     });
