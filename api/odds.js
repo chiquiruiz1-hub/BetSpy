@@ -56,6 +56,10 @@ function getMarketName(key, point) {
   }
 }
 
+// Solo procesamos mercados "back" estándar. Los _lay (apostar en contra en bolsas)
+// tienen semántica opuesta y producirían surebets falsas.
+const ALLOWED_MARKETS = new Set(['h2h', 'totals', 'spreads']);
+
 // Devuelve un array de señales (una por mercado/punto detectado)
 function calcularArbitrajes(event, sportKey) {
   if (!event.bookmakers || event.bookmakers.length < 2) return [];
@@ -64,6 +68,7 @@ function calcularArbitrajes(event, sportKey) {
   const groups = new Map();
   for (const bk of event.bookmakers) {
     for (const market of bk.markets) {
+      if (!ALLOWED_MARKETS.has(market.key)) continue;
       for (const outcome of market.outcomes) {
         const point = outcome.point ?? null;
         const groupKey = `${market.key}::${point ?? ''}`;
