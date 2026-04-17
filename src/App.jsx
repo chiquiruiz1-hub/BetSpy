@@ -27,6 +27,43 @@ function recomputeMargins(signals) {
   });
 }
 
+// Para datos demo sin commence_time, generamos horarios realistas escalonados
+// para que el feature de "cuándo empieza" se vea siempre fresco.
+function injectDemoTimes(signals) {
+  const offsetsHoras = [0.5, 2, 5, 9, 22, 27, 30, 48, 52, 70, 75, 96];
+  return signals.map((s, i) => {
+    if (s.commence_time) return s;
+    const t = new Date(Date.now() + (offsetsHoras[i % offsetsHoras.length]) * 3600 * 1000);
+    return { ...s, commence_time: t.toISOString() };
+  });
+}
+
+const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+// Convierte un ISO a algo legible: "Empieza en 8 min", "Hoy 21:00", "Mañana 18:30", "Sáb 19 abr · 20:00"
+function formatMatchTime(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  const diffMin = (d.getTime() - now.getTime()) / 60000;
+
+  if (diffMin < 0) return { text: 'En curso', urgency: 'live' };
+  if (diffMin < 60) return { text: `Empieza en ${Math.max(1, Math.round(diffMin))} min`, urgency: 'soon' };
+
+  const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
+  const startOfDay = new Date(d); startOfDay.setHours(0, 0, 0, 0);
+  const dayDiff = Math.round((startOfDay - startOfToday) / 86400000);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const urgency = diffMin < 360 ? 'today' : 'normal';
+
+  if (dayDiff === 0) return { text: `Hoy ${hh}:${mm}`, urgency };
+  if (dayDiff === 1) return { text: `Mañana ${hh}:${mm}`, urgency: 'normal' };
+  return { text: `${DIAS[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()]} · ${hh}:${mm}`, urgency: 'normal' };
+}
+
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTournament, setSelectedTournament] = useState('all');
@@ -80,16 +117,16 @@ function App() {
           }
         }
         allSignals = [...bestByMatch.values()];
-        setSignals(recomputeMargins(allSignals));
+        setSignals(injectDemoTimes(recomputeMargins(allSignals)));
         setMeta(mainMeta);
         setApiStatus('online');
       } else {
-        setSignals(recomputeMargins(signalsData));
+        setSignals(injectDemoTimes(recomputeMargins(signalsData)));
         setMeta(mainMeta);
         setApiStatus(mainMeta?.no_credits ? 'no_credits' : 'cache');
       }
     } catch {
-      setSignals(recomputeMargins(signalsData));
+      setSignals(injectDemoTimes(recomputeMargins(signalsData)));
       setApiStatus('cache');
     }
     setLastUpdated(new Date());
@@ -146,6 +183,10 @@ function App() {
     if (selectedMarket !== 'all' && (s.market_key || 'h2h') !== selectedMarket) return false;
     if (showOnlyProfitable && s.profit_margin <= 0) return false;
     return true;
+  }).sort((a, b) => {
+    const ta = a.commence_time ? new Date(a.commence_time).getTime() : Infinity;
+    const tb = b.commence_time ? new Date(b.commence_time).getTime() : Infinity;
+    return ta - tb;
   });
 
   // Estadísticas rápidas
@@ -347,9 +388,24 @@ function App() {
                         <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
                           {signal.market_name || 'Mercado'}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                          <Clock size={10} /> {apiStatus === 'online' ? 'Live' : 'Demo'}
-                        </span>
+                        {(() => {
+                          const t = formatMatchTime(signal.commence_time);
+                          if (!t) return (
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                              <Clock size={10} /> {apiStatus === 'online' ? 'Live' : 'Demo'}
+                            </span>
+                          );
+                          const colorClass =
+                            t.urgency === 'live' ? 'text-red-400 bg-red-500/10 border-red-500/30 animate-pulse'
+                            : t.urgency === 'soon' ? 'text-red-400 bg-red-500/10 border-red-500/30'
+                            : t.urgency === 'today' ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+                            : 'text-slate-400 bg-slate-800/50 border-white/5';
+                          return (
+                            <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 px-2 py-0.5 rounded-md border ${colorClass}`}>
+                              <Clock size={10} /> {t.text}
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       {signal.outcomes ? (
