@@ -94,6 +94,17 @@ function buildPlanText(signal, baseStake = 100) {
   return `${head}\n${timeLine}\n${lines}\n\n${tail}`;
 }
 
+// Las casas en las que el usuario tiene cuenta. Una señal solo es ejecutable
+// si TODAS sus cuotas provienen de casas de esta lista.
+const MY_BOOKMAKERS = ['bet365', 'bwin'];
+
+function isExecutable(signal) {
+  const bookmakers = signal.outcomes
+    ? signal.outcomes.map(o => o.bookmaker)
+    : [signal.bookmaker];
+  return bookmakers.every(b => b && MY_BOOKMAKERS.includes(b.toLowerCase()));
+}
+
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTournament, setSelectedTournament] = useState('all');
@@ -620,6 +631,13 @@ function App() {
                       </span>
                     </div>
                   </div>
+
+                  {/* Aviso de ejecutabilidad */}
+                  {!isExecutable(signal) && (
+                    <div className="mt-3 bg-red-500/15 border border-red-500/30 text-red-300 text-[10px] font-bold uppercase tracking-widest text-center px-2 py-1.5 rounded-lg">
+                      No ejecutable con tus casas (Bet365/Bwin)
+                    </div>
+                  )}
 
                   {/* Acciones - siempre visibles */}
                   <div className="mt-4 pt-4 border-t border-white/5 flex justify-center gap-2 flex-wrap">
