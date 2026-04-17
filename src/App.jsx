@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Zap,
@@ -71,7 +71,7 @@ function buildPlanText(signal, baseStake = 100) {
     : `SEÑAL ${signal.profit_margin > 0 ? '+' : ''}${signal.profit_margin}% · ${signal.match} (${signal.sport})`;
 
   const time = formatMatchTime(signal.commence_time);
-  const timeLine = time ? `Empieza: ${time.text}\n` : '';
+  const timeLine = time ? `${time.text}\n` : '';
 
   let lines = '';
   if (signal.outcomes && signal.outcomes.length >= 2) {
@@ -106,6 +106,21 @@ function App() {
   const [meta, setMeta] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [showOnlyProfitable, setShowOnlyProfitable] = useState(true);
+  const [newSignalKeys, setNewSignalKeys] = useState(new Set());
+  const prevSignalKeysRef = useRef(null);
+
+  const signalKey = (s) => `${s.match}::${s.market_name || ''}`;
+  const detectNewSignals = (signals) => {
+    const currentKeys = new Set(signals.map(signalKey));
+    if (prevSignalKeysRef.current !== null) {
+      const fresh = new Set();
+      for (const k of currentKeys) {
+        if (!prevSignalKeysRef.current.has(k)) fresh.add(k);
+      }
+      setNewSignalKeys(fresh);
+    }
+    prevSignalKeysRef.current = currentKeys;
+  };
 
   const refreshData = async () => {
     setLoading(true);
@@ -145,16 +160,22 @@ function App() {
           }
         }
         allSignals = [...bestByMatch.values()];
-        setSignals(injectDemoTimes(recomputeMargins(allSignals)));
+        const finalSignals = injectDemoTimes(recomputeMargins(allSignals));
+        setSignals(finalSignals);
+        detectNewSignals(finalSignals);
         setMeta(mainMeta);
         setApiStatus('online');
       } else {
-        setSignals(injectDemoTimes(recomputeMargins(signalsData)));
+        const finalSignals = injectDemoTimes(recomputeMargins(signalsData));
+        setSignals(finalSignals);
+        detectNewSignals(finalSignals);
         setMeta(mainMeta);
         setApiStatus(mainMeta?.no_credits ? 'no_credits' : 'cache');
       }
     } catch {
-      setSignals(injectDemoTimes(recomputeMargins(signalsData)));
+      const finalSignals = injectDemoTimes(recomputeMargins(signalsData));
+      setSignals(finalSignals);
+      detectNewSignals(finalSignals);
       setApiStatus('cache');
     }
     setLastUpdated(new Date());
@@ -436,10 +457,17 @@ function App() {
                     signal.is_surebet ? 'border-emerald-500/30 shadow-lg shadow-emerald-500/5' : 'border-white/5 hover:border-emerald-500/30'
                   }`}
                 >
-                  {/* Surebet Badge */}
+                  {/* Badges */}
                   {signal.is_surebet && (
                     <div className="absolute top-0 right-0 bg-emerald-500 text-slate-950 text-[8px] font-black px-3 py-1 rounded-bl-2xl uppercase tracking-widest">
                       Surebet
+                    </div>
+                  )}
+                  {newSignalKeys.has(signalKey(signal)) && (
+                    <div className={`absolute top-0 bg-blue-500 text-white text-[8px] font-black px-3 py-1 rounded-br-2xl uppercase tracking-widest animate-pulse ${
+                      signal.is_surebet ? 'left-0 rounded-tl-[32px]' : 'left-0 rounded-tl-[32px]'
+                    }`}>
+                      Nuevo
                     </div>
                   )}
 
