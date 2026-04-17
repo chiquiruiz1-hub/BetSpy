@@ -64,6 +64,34 @@ function formatMatchTime(iso) {
   return { text: `${DIAS[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()]} · ${hh}:${mm}`, urgency: 'normal' };
 }
 
+// Construye el texto del plan de apuestas listo para portapapeles
+function buildPlanText(signal, baseStake = 100) {
+  const head = signal.is_surebet
+    ? `SUREBET +${signal.profit_margin}% · ${signal.match} (${signal.sport})`
+    : `SEÑAL ${signal.profit_margin > 0 ? '+' : ''}${signal.profit_margin}% · ${signal.match} (${signal.sport})`;
+
+  const time = formatMatchTime(signal.commence_time);
+  const timeLine = time ? `Empieza: ${time.text}\n` : '';
+
+  let lines = '';
+  if (signal.outcomes && signal.outcomes.length >= 2) {
+    const invSum = signal.outcomes.reduce((acc, o) => acc + 1 / o.price, 0);
+    lines = signal.outcomes.map(o => {
+      const stake = (baseStake * (1 / o.price)) / invSum;
+      return `→ €${stake.toFixed(2)} a ${o.name} en ${o.bookmaker} @${o.price.toFixed(2)}`;
+    }).join('\n');
+  } else {
+    lines = `→ €${baseStake.toFixed(2)} a ${signal.bet_to} en ${signal.bookmaker} @${signal.price.toFixed(2)}`;
+  }
+
+  const profit = (baseStake * signal.profit_margin / 100).toFixed(2);
+  const tail = signal.is_surebet
+    ? `Beneficio garantizado: +€${profit} (sobre ${baseStake}€)`
+    : `Beneficio estimado: ${signal.profit_margin > 0 ? '+' : ''}€${profit} (sobre ${baseStake}€)`;
+
+  return `${head}\n${timeLine}\n${lines}\n\n${tail}`;
+}
+
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTournament, setSelectedTournament] = useState('all');
@@ -510,8 +538,8 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Calculadora - siempre visible */}
-                  <div className="mt-4 pt-4 border-t border-white/5 flex justify-center">
+                  {/* Acciones - siempre visibles */}
+                  <div className="mt-4 pt-4 border-t border-white/5 flex justify-center gap-2 flex-wrap">
                     <button
                       onClick={() => {
                         setSelectedSignal(signal);
@@ -519,7 +547,18 @@ function App() {
                       }}
                       className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-500/10 px-4 py-2 rounded-lg transition-colors"
                     >
-                      Calculadora de Stake <TrendingUp size={12} />
+                      Calculadora <TrendingUp size={12} />
+                    </button>
+                    <button
+                      onClick={() => copyToClipboard(`plan-${idx}`, buildPlanText(signal))}
+                      className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                        copiedId === `plan-${idx}`
+                          ? 'bg-emerald-500 text-slate-950'
+                          : 'text-emerald-500 hover:bg-emerald-500/10'
+                      }`}
+                    >
+                      {copiedId === `plan-${idx}` ? '¡Copiado!' : 'Copiar plan'}
+                      {copiedId === `plan-${idx}` ? <Check size={12} /> : <Copy size={12} />}
                     </button>
                   </div>
                 </motion.div>
