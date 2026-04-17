@@ -2,6 +2,9 @@ const API_KEYS = [
   process.env.API_FOOTBALL_KEY,
   process.env.API_FOOTBALL_KEY_2,
   process.env.API_FOOTBALL_KEY_3,
+  process.env.API_FOOTBALL_KEY_4,
+  process.env.API_FOOTBALL_KEY_5,
+  process.env.API_FOOTBALL_KEY_6,
 ].filter(Boolean);
 
 // Seleccionar key según la hora del día para distribuir uso
@@ -102,7 +105,7 @@ function calcularArbitraje(fixture, oddsData) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=300');
+  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=1800');
 
   if (!API_KEY) {
     return res.status(200).json({ signals: [], meta: { source: 'api-football', error: 'No API key' } });

@@ -2,6 +2,9 @@ const API_KEYS = [
   process.env.THE_ODDS_API_KEY_1,
   process.env.THE_ODDS_API_KEY_2,
   process.env.THE_ODDS_API_KEY_3,
+  process.env.THE_ODDS_API_KEY_4,
+  process.env.THE_ODDS_API_KEY_5,
+  process.env.THE_ODDS_API_KEY_6,
 ].filter(Boolean);
 const BASE_URL = 'https://api.the-odds-api.com/v4';
 
@@ -20,19 +23,20 @@ async function getActiveKey() {
 }
 
 // Categorías con cuántos torneos queremos de cada una (máx por categoría)
+// Ajustado para minimizar consumo de créditos: total ≈ 10 torneos × 2 mercados = 20 créditos/refresco
 const SPORT_CONFIG = [
-  { prefix: 'soccer', label: 'Fútbol', slots: 6 },
+  { prefix: 'soccer', label: 'Fútbol', slots: 4 },
   { prefix: 'basketball', label: 'Basket', slots: 2 },
   { prefix: 'tennis', label: 'Tenis', slots: 2 },
-  { prefix: 'icehockey', label: 'Hockey', slots: 2 },
-  { prefix: 'baseball', label: 'Béisbol', slots: 2 },
-  { prefix: 'mma', label: 'MMA', slots: 1 },
-  { prefix: 'boxing', label: 'Boxeo', slots: 1 },
-  { prefix: 'rugbyleague', label: 'Rugby', slots: 1 },
-  { prefix: 'handball', label: 'Balonmano', slots: 1 },
+  { prefix: 'icehockey', label: 'Hockey', slots: 1 },
+  { prefix: 'baseball', label: 'Béisbol', slots: 0 },
+  { prefix: 'mma', label: 'MMA', slots: 0 },
+  { prefix: 'boxing', label: 'Boxeo', slots: 0 },
+  { prefix: 'rugbyleague', label: 'Rugby', slots: 0 },
+  { prefix: 'handball', label: 'Balonmano', slots: 0 },
   { prefix: 'americanfootball', label: 'Fútbol Americano', slots: 1 },
-  { prefix: 'cricket', label: 'Cricket', slots: 1 },
-  { prefix: 'aussierules', label: 'Aussie Rules', slots: 1 },
+  { prefix: 'cricket', label: 'Cricket', slots: 0 },
+  { prefix: 'aussierules', label: 'Aussie Rules', slots: 0 },
 ];
 
 function getSportCategory(sportKey) {
@@ -121,8 +125,8 @@ function calcularArbitrajes(event, sportKey) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  // Cache 15 minutos para ahorrar créditos
-  res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=300');
+  // Cache 1 hora + 30 min stale para ahorrar créditos al máximo
+  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=1800');
 
   if (API_KEYS.length === 0) {
     return res.status(500).json({ error: 'API keys not configured' });

@@ -239,7 +239,7 @@ function App() {
   };
 
   // Tiempo restante hasta la próxima auto-actualización
-  const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+  const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
   const getTimeToNextRefresh = () => {
     if (!lastUpdated || loading) return null;
     const remaining = REFRESH_INTERVAL_MS - (Date.now() - lastUpdated.getTime());
