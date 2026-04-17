@@ -12,7 +12,9 @@ import {
   Layout,
   ChevronDown,
   X,
-  Filter
+  Filter,
+  Bell,
+  BellOff
 } from 'lucide-react';
 import signalsData from './data/signals.json';
 
@@ -108,6 +110,9 @@ function App() {
   const [showOnlyProfitable, setShowOnlyProfitable] = useState(true);
   const [newSignalKeys, setNewSignalKeys] = useState(new Set());
   const prevSignalKeysRef = useRef(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    () => typeof window !== 'undefined' && localStorage.getItem('betspy_notif') === '1'
+  );
 
   const signalKey = (s) => `${s.match}::${s.market_name || ''}`;
   const detectNewSignals = (signals) => {
@@ -118,8 +123,46 @@ function App() {
         if (!prevSignalKeysRef.current.has(k)) fresh.add(k);
       }
       setNewSignalKeys(fresh);
+      // Notificación si está activada, la pestaña está oculta y hay surebets nuevas
+      if (notificationsEnabled && document.hidden && fresh.size > 0 &&
+          typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        const newSurebets = signals.filter(s => fresh.has(signalKey(s)) && s.is_surebet);
+        if (newSurebets.length > 0) {
+          const best = Math.max(...newSurebets.map(s => s.profit_margin));
+          const title = newSurebets.length === 1
+            ? 'Nueva surebet disponible'
+            : `${newSurebets.length} surebets nuevas`;
+          const body = newSurebets.length === 1
+            ? `${newSurebets[0].match} · +${newSurebets[0].profit_margin}%`
+            : `Mejor margen: +${best}%`;
+          try { new Notification(title, { body, icon: '/vite.svg' }); } catch { /* ignore */ }
+        }
+      }
     }
     prevSignalKeysRef.current = currentKeys;
+  };
+
+  const toggleNotifications = async () => {
+    if (notificationsEnabled) {
+      setNotificationsEnabled(false);
+      localStorage.setItem('betspy_notif', '0');
+      return;
+    }
+    if (typeof Notification === 'undefined') {
+      alert('Tu navegador no soporta notificaciones.');
+      return;
+    }
+    let permission = Notification.permission;
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+    }
+    if (permission === 'granted') {
+      setNotificationsEnabled(true);
+      localStorage.setItem('betspy_notif', '1');
+      new Notification('Alertas activadas', { body: 'Te avisaremos cuando aparezcan nuevas surebets.', icon: '/vite.svg' });
+    } else {
+      alert('Las notificaciones están bloqueadas. Revisa los permisos del navegador.');
+    }
   };
 
   const refreshData = async () => {
@@ -340,6 +383,18 @@ function App() {
               title="Actualizar datos"
             >
               <RefreshCcw size={20} className={loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'} />
+            </button>
+
+            <button
+              onClick={toggleNotifications}
+              className={`p-3 rounded-2xl border transition-all ${
+                notificationsEnabled
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:border-emerald-500/50'
+                  : 'bg-slate-900 text-slate-400 border-white/5 hover:text-white hover:border-emerald-500/30'
+              }`}
+              title={notificationsEnabled ? 'Desactivar alertas' : 'Activar alertas de nuevas surebets'}
+            >
+              {notificationsEnabled ? <Bell size={20} /> : <BellOff size={20} />}
             </button>
 
             {/* Desplegable Deporte */}
