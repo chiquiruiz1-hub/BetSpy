@@ -200,14 +200,31 @@ export default async function handler(req, res) {
       });
     }
 
-    // 4. Calcular arbitraje (puede haber varias señales por evento, una por mercado)
+    // 4. Calcular arbitraje + diagnóstico de bookmakers
     const signals = [];
+    let totalEvents = 0;
+    let eventsWithBet365 = 0, eventsWithBwin = 0, eventsWithBoth = 0;
+    const bookmakerCounts = {};
     for (const result of rawResults) {
       if (result === 'NO_CREDITS') continue;
       for (const event of result.events) {
+        totalEvents++;
+        const bookTitles = (event.bookmakers || []).map(b => b.title);
+        const hasBet365 = bookTitles.some(t => t.toLowerCase() === 'bet365');
+        const hasBwin = bookTitles.some(t => t.toLowerCase() === 'bwin');
+        if (hasBet365) eventsWithBet365++;
+        if (hasBwin) eventsWithBwin++;
+        if (hasBet365 && hasBwin) eventsWithBoth++;
+        for (const t of bookTitles) {
+          bookmakerCounts[t] = (bookmakerCounts[t] || 0) + 1;
+        }
         signals.push(...calcularArbitrajes(event, result.sportKey));
       }
     }
+    const topBookmakers = Object.entries(bookmakerCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 15)
+      .map(([name, count]) => ({ name, count }));
 
     // 5. Ordenar: surebets primero, luego por margen descendente
     signals.sort((a, b) => {
@@ -222,6 +239,11 @@ export default async function handler(req, res) {
         total: signals.length,
         surebets: signals.filter(s => s.is_surebet).length,
         sports_checked: sportsToFetch.length,
+        events_total: totalEvents,
+        events_with_bet365: eventsWithBet365,
+        events_with_bwin: eventsWithBwin,
+        events_with_both: eventsWithBoth,
+        top_bookmakers: topBookmakers,
         credits_remaining: creditsRemaining,
         updated_at: new Date().toISOString(),
       },
