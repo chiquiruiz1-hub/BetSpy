@@ -30,6 +30,7 @@ function recomputeMargins(signals) {
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTournament, setSelectedTournament] = useState('all');
+  const [selectedMarket, setSelectedMarket] = useState('all');
   const [signals, setSignals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
@@ -142,6 +143,7 @@ function App() {
   const filteredSignals = signals.filter(s => {
     if (selectedCategory !== 'all' && (s.sport_category || 'Otros') !== selectedCategory) return false;
     if (selectedTournament !== 'all' && s.sport !== selectedTournament) return false;
+    if (selectedMarket !== 'all' && (s.market_key || 'h2h') !== selectedMarket) return false;
     if (showOnlyProfitable && s.profit_margin <= 0) return false;
     return true;
   });
@@ -239,6 +241,20 @@ function App() {
                 {tournaments.map(t => (
                   <option key={t} value={t}>{t} ({signals.filter(s => s.sport === t).length})</option>
                 ))}
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+
+            {/* Desplegable Mercado */}
+            <div className="relative">
+              <select
+                value={selectedMarket}
+                onChange={(e) => setSelectedMarket(e.target.value)}
+                className="appearance-none bg-slate-900/50 backdrop-blur-xl border border-white/5 hover:border-emerald-500/30 pl-4 pr-10 py-3 rounded-2xl text-sm font-bold text-white transition-all cursor-pointer focus:outline-none focus:border-emerald-500/50"
+              >
+                <option value="all">Todos los mercados</option>
+                <option value="h2h">Resultado ({signals.filter(s => (s.market_key || 'h2h') === 'h2h').length})</option>
+                <option value="totals">Más/Menos ({signals.filter(s => s.market_key === 'totals').length})</option>
               </select>
               <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
