@@ -133,14 +133,28 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Obtener cuotas (usar endpoint de odds por fecha, gasta menos requests)
-    const oddsPages = await fetchAPI(`/odds?date=${today}&timezone=Europe/Madrid`);
+    // 2. Obtener cuotas paginadas (hasta MAX_PAGES para no quemar el presupuesto diario)
+    const MAX_PAGES = 10;
+    const firstPage = await fetchAPI(`/odds?date=${today}&timezone=Europe/Madrid&page=1`);
+    const totalPages = Math.min(firstPage?.paging?.total || 1, MAX_PAGES);
     const oddsMap = new Map();
-    if (oddsPages?.response) {
-      for (const item of oddsPages.response) {
+    const addPage = (page) => {
+      if (!page?.response) return;
+      for (const item of page.response) {
         oddsMap.set(item.fixture.id, item);
       }
+    };
+    addPage(firstPage);
+    if (totalPages > 1) {
+      const remaining = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          fetchAPI(`/odds?date=${today}&timezone=Europe/Madrid&page=${i + 2}`)
+        )
+      );
+      for (const p of remaining) addPage(p);
     }
+    // Para seguir informando el estado de paginación
+    const oddsPages = firstPage;
 
     // Diagnóstico: contar cuántos matches tienen cada casa
     let withBet365 = 0, withBwin = 0, withBoth = 0, withAnyBook = 0;

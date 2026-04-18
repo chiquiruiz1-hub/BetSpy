@@ -187,6 +187,7 @@ function App() {
 
       let allSignals = [];
       let mainMeta = null;
+      let footballSignals = 0;
 
       if (oddsRes?.ok) {
         const data = await oddsRes.json();
@@ -195,6 +196,8 @@ function App() {
           mainMeta = data.meta;
         } else if (data.meta?.no_credits) {
           mainMeta = data.meta;
+        } else if (data.meta) {
+          mainMeta = data.meta;
         }
       }
 
@@ -202,8 +205,10 @@ function App() {
         const data = await footballRes.json();
         if (data.signals.length > 0) {
           allSignals.push(...data.signals);
+          footballSignals = data.signals.length;
         }
       }
+      mainMeta = { ...(mainMeta || {}), football_signals: footballSignals };
 
       if (allSignals.length > 0) {
         const bestByMatch = new Map();
@@ -382,7 +387,12 @@ function App() {
                     : Number(meta.credits_remaining) > 20 ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
                     : 'text-red-400 bg-red-500/10 border-red-500/30'
                   }`}>
-                    {meta.credits_remaining} créditos
+                    Odds API: {meta.credits_remaining}
+                  </span>
+                )}
+                {meta?.football_signals > 0 && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border text-emerald-400 bg-emerald-500/10 border-emerald-500/30">
+                    Fútbol: {meta.football_signals} señales
                   </span>
                 )}
               </div>
