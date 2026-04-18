@@ -180,9 +180,12 @@ function App() {
   const refreshData = async () => {
     setLoading(true);
     try {
+      // Bucket de 15 min: misma URL para todos los usuarios dentro del mismo cuarto de hora
+      // (caché compartido), pero URL nueva cada 15 min para evitar cachés viejos venenosos.
+      const cb = Math.floor(Date.now() / (15 * 60 * 1000));
       const [oddsRes, footballRes] = await Promise.all([
-        fetch('/api/odds').catch(() => null),
-        fetch('/api/football-odds').catch(() => null),
+        fetch(`/api/odds?cb=${cb}`).catch(() => null),
+        fetch(`/api/football-odds?cb=${cb}`).catch(() => null),
       ]);
 
       let allSignals = [];
