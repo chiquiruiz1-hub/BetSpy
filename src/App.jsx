@@ -119,6 +119,7 @@ function App() {
   const [meta, setMeta] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [showOnlyProfitable, setShowOnlyProfitable] = useState(true);
+  const [showOnlyExecutable, setShowOnlyExecutable] = useState(false);
   const [newSignalKeys, setNewSignalKeys] = useState(new Set());
   const prevSignalKeysRef = useRef(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(
@@ -316,6 +317,7 @@ function App() {
     if (selectedTournament !== 'all' && s.sport !== selectedTournament) return false;
     if (selectedMarket !== 'all' && (s.market_key || 'h2h') !== selectedMarket) return false;
     if (showOnlyProfitable && s.profit_margin <= 0) return false;
+    if (showOnlyExecutable && !isExecutable(s)) return false;
     return true;
   }).sort((a, b) => {
     const ta = a.commence_time ? new Date(a.commence_time).getTime() : Infinity;
@@ -479,17 +481,31 @@ function App() {
               </span>
             </div>
           </div>
-          <button
-            onClick={() => setShowOnlyProfitable(!showOnlyProfitable)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all border ${
-              showOnlyProfitable
-                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                : 'bg-slate-900/50 text-slate-400 border-white/5'
-            }`}
-          >
-            <Filter size={14} />
-            {showOnlyProfitable ? 'Solo rentables' : 'Mostrar todas'}
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setShowOnlyProfitable(!showOnlyProfitable)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all border ${
+                showOnlyProfitable
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                  : 'bg-slate-900/50 text-slate-400 border-white/5'
+              }`}
+            >
+              <Filter size={14} />
+              {showOnlyProfitable ? 'Solo rentables' : 'Mostrar todas'}
+            </button>
+            <button
+              onClick={() => setShowOnlyExecutable(!showOnlyExecutable)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all border ${
+                showOnlyExecutable
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                  : 'bg-slate-900/50 text-slate-400 border-white/5'
+              }`}
+              title="Solo señales ejecutables con Bet365 o Bwin"
+            >
+              <ShieldCheck size={14} />
+              {showOnlyExecutable ? 'Solo ejecutables' : 'Todas las casas'}
+            </button>
+          </div>
         </div>
 
         {/* Grid of Cards */}
