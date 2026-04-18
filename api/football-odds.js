@@ -99,9 +99,11 @@ function calcularArbitraje(fixture, oddsData) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
+  // Cache largo por defecto, pero las respuestas vacías o de error lo sobrescriben a no-store
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=1800');
 
   if (!API_KEY) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({ signals: [], meta: { source: 'api-football', error: 'No API key' } });
   }
 
@@ -121,6 +123,7 @@ export default async function handler(req, res) {
     ];
 
     if (allFixtures.length === 0) {
+      res.setHeader('Cache-Control', 'no-store');
       return res.status(200).json({
         signals: [],
         meta: {
@@ -133,8 +136,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Obtener cuotas paginadas (hasta MAX_PAGES para no quemar el presupuesto diario)
-    const MAX_PAGES = 10;
+    // 2. Obtener cuotas paginadas (5 páginas = 50 partidos, dentro del rate limit de 10 req/min)
+    const MAX_PAGES = 5;
     const firstPage = await fetchAPI(`/odds?date=${today}&timezone=Europe/Madrid&page=1`);
     const totalPages = Math.min(firstPage?.paging?.total || 1, MAX_PAGES);
     const oddsMap = new Map();
@@ -194,6 +197,11 @@ export default async function handler(req, res) {
       return b.profit_margin - a.profit_margin;
     });
 
+    // Si no hay señales, no cachear (probablemente fue un fallo de rate-limit)
+    if (signals.length === 0) {
+      res.setHeader('Cache-Control', 'no-store');
+    }
+
     return res.status(200).json({
       signals,
       meta: {
@@ -212,6 +220,7 @@ export default async function handler(req, res) {
       },
     });
   } catch (error) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({ signals: [], meta: { source: 'api-football', error: error.message } });
   }
 }
