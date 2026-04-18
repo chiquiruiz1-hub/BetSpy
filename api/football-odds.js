@@ -7,15 +7,6 @@ const API_KEYS = [
   process.env.API_FOOTBALL_KEY_6,
 ].filter(Boolean);
 
-// Seleccionar key según la hora del día para distribuir uso
-function getActiveKey() {
-  if (API_KEYS.length === 0) return null;
-  const hour = new Date().getUTCHours();
-  const index = hour % API_KEYS.length;
-  return API_KEYS[index];
-}
-
-const API_KEY = getActiveKey();
 const BASE_URL = 'https://v3.football.api-sports.io';
 
 // IDs de Bet365 y Bwin en API-Football
@@ -24,21 +15,40 @@ const BOOKMAKER_IDS = {
   bwin: 6,
 };
 
+// Conveniencia para saber si hay alguna key configurada
+const API_KEY = API_KEYS[0] || null;
+
+// Hace una petición probando las keys en orden empezando por la rotada por hora.
+// Si una devuelve errores (rate limit etc) se prueba la siguiente.
 async function fetchAPI(endpoint) {
-  try {
-    const r = await fetch(`${BASE_URL}${endpoint}`, {
-      method: 'GET',
-      headers: {
-        'x-apisports-key': API_KEY,
-        'x-rapidapi-key': API_KEY,
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-      },
-    });
-    const data = await r.json();
-    return data;
-  } catch (e) {
-    return { error: e.message };
+  if (API_KEYS.length === 0) return { error: 'no keys' };
+  const startIdx = new Date().getUTCHours() % API_KEYS.length;
+  let lastError = null;
+  for (let i = 0; i < API_KEYS.length; i++) {
+    const key = API_KEYS[(startIdx + i) % API_KEYS.length];
+    try {
+      const r = await fetch(`${BASE_URL}${endpoint}`, {
+        method: 'GET',
+        headers: {
+          'x-apisports-key': key,
+          'x-rapidapi-key': key,
+          'x-rapidapi-host': 'v3.football.api-sports.io',
+        },
+      });
+      const data = await r.json();
+      const hasErrors = data && data.errors && (
+        Array.isArray(data.errors) ? data.errors.length > 0 : Object.keys(data.errors).length > 0
+      );
+      if (hasErrors) {
+        lastError = data.errors;
+        continue;
+      }
+      return data;
+    } catch (e) {
+      lastError = e.message;
+    }
   }
+  return { error: lastError || 'all keys failed' };
 }
 
 function calcularArbitraje(fixture, oddsData) {

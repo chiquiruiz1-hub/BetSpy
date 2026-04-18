@@ -180,9 +180,9 @@ function App() {
   const refreshData = async () => {
     setLoading(true);
     try {
-      // Bucket de 15 min: misma URL para todos los usuarios dentro del mismo cuarto de hora
-      // (caché compartido), pero URL nueva cada 15 min para evitar cachés viejos venenosos.
-      const cb = Math.floor(Date.now() / (15 * 60 * 1000));
+      // Bucket de 1 hora alineado con el caché de Vercel (s-maxage=3600).
+      // URL nueva cada hora evita cachés viejos venenosos sin multiplicar peticiones.
+      const cb = Math.floor(Date.now() / (60 * 60 * 1000));
       const [oddsRes, footballRes] = await Promise.all([
         fetch(`/api/odds?cb=${cb}`).catch(() => null),
         fetch(`/api/football-odds?cb=${cb}`).catch(() => null),
@@ -393,15 +393,9 @@ function App() {
                     Odds API: {meta.credits_remaining}
                   </span>
                 )}
-                {meta && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                    Number(meta.football_signals) > 0
-                      ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
-                      : meta.football_signals === undefined
-                        ? 'text-purple-400 bg-purple-500/10 border-purple-500/30'
-                        : 'text-slate-400 bg-slate-500/10 border-slate-500/30'
-                  }`}>
-                    Fútbol: {meta.football_signals === undefined ? 'sin campo' : meta.football_signals}
+                {meta?.football_signals > 0 && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border text-emerald-400 bg-emerald-500/10 border-emerald-500/30">
+                    Fútbol: {meta.football_signals} señales
                   </span>
                 )}
               </div>
