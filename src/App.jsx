@@ -393,9 +393,15 @@ function App() {
                     Odds API: {meta.credits_remaining}
                   </span>
                 )}
-                {meta?.football_signals > 0 && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border text-emerald-400 bg-emerald-500/10 border-emerald-500/30">
-                    Fútbol: {meta.football_signals} señales
+                {meta && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    Number(meta.football_signals) > 0
+                      ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+                      : meta.football_signals === undefined
+                        ? 'text-purple-400 bg-purple-500/10 border-purple-500/30'
+                        : 'text-slate-400 bg-slate-500/10 border-slate-500/30'
+                  }`}>
+                    Fútbol: {meta.football_signals === undefined ? 'sin campo' : meta.football_signals}
                   </span>
                 )}
               </div>
